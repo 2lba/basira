@@ -34,10 +34,10 @@ class Settings(BaseSettings):
     claude_temperature: float = 0.2
 
     github_app_id: str = ""
-    github_client_id: str = ""
-    github_client_secret: str = ""
-    github_private_key_path: str = ""
-    github_webhook_secret: str = ""
+    github_app_client_id: str = ""
+    github_app_client_secret: str = ""
+    github_app_private_key_path: str = ""
+    github_app_webhook_secret: str = ""
     github_app_name: str = "basira"
 
     cors_origins: str = "http://localhost:5173"

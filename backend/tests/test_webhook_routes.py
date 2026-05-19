@@ -11,7 +11,7 @@ from app.models.webhook_event import WebhookEvent
 
 
 def _secret() -> str:
-    return get_settings().github_webhook_secret or "test_webhook_secret"
+    return get_settings().github_app_webhook_secret or "test_webhook_secret"
 
 
 SECRET = _secret()

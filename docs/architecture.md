@@ -8,7 +8,7 @@ A short tour for someone reading the code for the first time.
 github → webhook → backend → arq → worker → claude → github
 ```
 
-1. `POST /webhooks/github` (FastAPI) verifies HMAC SHA-256 with `GITHUB_WEBHOOK_SECRET`.
+1. `POST /webhooks/github` (FastAPI) verifies HMAC SHA-256 with `GITHUB_APP_WEBHOOK_SECRET`.
 2. It records the event in `webhook_events` keyed by `X-GitHub-Delivery` (idempotent on replay).
 3. For `pull_request` events with action `opened|synchronize|reopened|ready_for_review`, it upserts the repository and PR rows, then enqueues a job on the arq queue keyed by `review:<pr_id>` (dedup).
 4. The arq worker (`app.workers.main.review_pr`) loads the PR, runs `services.review_engine.run_review`, then `services.comment_poster.post_review_to_github`.

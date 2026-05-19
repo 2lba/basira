@@ -26,10 +26,10 @@ class GithubProfile:
 
 def authorize_url(redirect_uri: str, state: str, scopes: str = DEFAULT_SCOPES) -> str:
     s = get_settings()
-    if not s.github_client_id:
-        raise GithubOAuthError("GITHUB_CLIENT_ID not configured")
+    if not s.github_app_client_id:
+        raise GithubOAuthError("GITHUB_APP_CLIENT_ID not configured")
     params = {
-        "client_id": s.github_client_id,
+        "client_id": s.github_app_client_id,
         "redirect_uri": redirect_uri,
         "state": state,
         "scope": scopes,
@@ -40,15 +40,15 @@ def authorize_url(redirect_uri: str, state: str, scopes: str = DEFAULT_SCOPES) -
 
 async def exchange_code(code: str, redirect_uri: str) -> str:
     s = get_settings()
-    if not s.github_client_id or not s.github_client_secret:
+    if not s.github_app_client_id or not s.github_app_client_secret:
         raise GithubOAuthError("github oauth client not configured")
 
     async with httpx.AsyncClient(timeout=15.0) as client:
         r = await client.post(
             GH_TOKEN_URL,
             data={
-                "client_id": s.github_client_id,
-                "client_secret": s.github_client_secret,
+                "client_id": s.github_app_client_id,
+                "client_secret": s.github_app_client_secret,
                 "code": code,
                 "redirect_uri": redirect_uri,
             },
