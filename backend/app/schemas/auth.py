@@ -8,6 +8,7 @@ class MeResponse(BaseModel):
     github_login: str
     email: str | None = None
     avatar_url: str | None = None
+    install_url: str
 
 
 class LoginUrlResponse(BaseModel):

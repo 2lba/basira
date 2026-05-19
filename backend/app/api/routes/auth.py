@@ -236,6 +236,11 @@ async def logout(
     return {"ok": True}
 
 
+def _install_url() -> str:
+    name = get_settings().github_app_name or "reviewly"
+    return f"https://github.com/apps/{name}/installations/new"
+
+
 @router.get("/me", response_model=MeResponse)
 async def me(user: User = Depends(current_user)):
     return MeResponse(
@@ -243,4 +248,5 @@ async def me(user: User = Depends(current_user)):
         github_login=user.github_login,
         email=user.email,
         avatar_url=user.avatar_url,
+        install_url=_install_url(),
     )
