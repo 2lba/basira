@@ -1,8 +1,20 @@
+import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { LogOut, GitPullRequest, GitBranch, Settings, Search, Info } from "lucide-react";
+import { LogOut, GitPullRequest, GitBranch, Settings, Search, Info, Command } from "lucide-react";
 import { logout } from "../api/client.js";
+import ShortcutsModal from "./ShortcutsModal.jsx";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts.js";
 
 export default function Layout({ user, onLogout }) {
+  const [help, setHelp] = useState(false);
+
+  useKeyboardShortcuts({
+    onOpenHelp: () => setHelp(true),
+    onScanNow: () => {
+      const btn = document.querySelector('[data-testid="scan-now"]');
+      if (btn && !btn.disabled) btn.click();
+    },
+  });
   async function handleLogout() {
     try {
       await logout();
@@ -13,6 +25,7 @@ export default function Layout({ user, onLogout }) {
 
   return (
     <div className="min-h-full flex">
+      <ShortcutsModal open={help} onClose={() => setHelp(false)} />
       <aside className="w-60 border-r border-border-subtle flex flex-col">
         <div className="px-6 py-5 border-b border-border-subtle">
           <span className="text-fg font-semibold tracking-tight">reviewly</span>
@@ -36,6 +49,15 @@ export default function Layout({ user, onLogout }) {
             )}
             <span className="text-fg-secondary truncate">{user.github_login}</span>
           </div>
+          <button
+            type="button"
+            onClick={() => setHelp(true)}
+            className="btn btn-ghost w-full justify-start"
+            data-testid="open-shortcuts"
+          >
+            <Command size={14} />
+            <span>shortcuts</span>
+          </button>
           <button onClick={handleLogout} className="btn btn-ghost w-full justify-start">
             <LogOut size={14} />
             <span>sign out</span>
