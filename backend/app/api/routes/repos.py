@@ -31,6 +31,7 @@ def _to_out(r: Repository) -> RepoOut:
         ignored_paths=r.ignored_paths,
         custom_rules=r.custom_rules,
         model_override=r.model_override,
+        connected=r.connected,
         schedule_kind=r.schedule_kind,
         schedule_dow=r.schedule_dow,
         schedule_dom=r.schedule_dom,

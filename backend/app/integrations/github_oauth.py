@@ -9,7 +9,7 @@ GH_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
 GH_TOKEN_URL = "https://github.com/login/oauth/access_token"  # noqa: S105
 GH_API = "https://api.github.com"
 
-DEFAULT_SCOPES = "read:user user:email"
+DEFAULT_SCOPES = "read:user user:email repo"
 
 
 class GithubOAuthError(Exception):
@@ -93,3 +93,64 @@ async def fetch_profile(access_token: str) -> GithubProfile:
         email=email,
         avatar_url=user.get("avatar_url"),
     )
+
+
+@dataclass(frozen=True)
+class OAuthRepo:
+    github_repo_id: int
+    owner: str
+    name: str
+    full_name: str
+    default_branch: str | None
+    private: bool
+
+
+async def list_user_repos(
+    access_token: str, max_pages: int = 10
+) -> list[OAuthRepo]:
+    """Paginate /user/repos with the user's OAuth token. Caps at
+    100*max_pages results to keep first-login latency bounded."""
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    out: list[OAuthRepo] = []
+    async with httpx.AsyncClient(timeout=30.0, headers=headers) as client:
+        page = 1
+        while page <= max_pages:
+            r = await client.get(
+                f"{GH_API}/user/repos",
+                params={
+                    "per_page": 100,
+                    "page": page,
+                    "affiliation": "owner,collaborator,organization_member",
+                    "sort": "updated",
+                },
+            )
+            if r.status_code != 200:
+                raise GithubOAuthError(
+                    f"github /user/repos failed: {r.status_code}"
+                )
+            items = r.json()
+            if not isinstance(items, list) or not items:
+                break
+            for it in items:
+                full = it.get("full_name") or ""
+                if "/" not in full:
+                    continue
+                owner, name = full.split("/", 1)
+                out.append(
+                    OAuthRepo(
+                        github_repo_id=int(it["id"]),
+                        owner=owner,
+                        name=name,
+                        full_name=full,
+                        default_branch=it.get("default_branch"),
+                        private=bool(it.get("private", False)),
+                    )
+                )
+            if len(items) < 100:
+                break
+            page += 1
+    return out

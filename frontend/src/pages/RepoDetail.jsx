@@ -193,13 +193,24 @@ export default function RepoDetail() {
         </div>
         <button
           data-testid="scan-now"
-          disabled={starting || !!activeScan}
+          disabled={starting || !!activeScan || !repo.connected}
           onClick={scanNow}
+          title={
+            !repo.connected
+              ? "Install the app on this repo to enable scans."
+              : undefined
+          }
           className="btn btn-primary disabled:opacity-50"
         >
           <Play size={14} />
           <span>
-            {activeScan ? "scanning..." : starting ? "starting..." : "scan now"}
+            {!repo.connected
+              ? "install to scan"
+              : activeScan
+                ? "scanning..."
+                : starting
+                  ? "starting..."
+                  : "scan now"}
           </span>
         </button>
       </div>

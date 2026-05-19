@@ -74,6 +74,12 @@ async def start_scan(
     repo = await db.get(Repository, rid)
     if repo is None or repo.deleted_at is not None:
         raise AppError("REPO_NOT_FOUND", "repo not found", status.HTTP_404_NOT_FOUND)
+    if not repo.connected:
+        raise AppError(
+            "REPO_NOT_CONNECTED",
+            "install the app on this repo to enable scans",
+            status.HTTP_409_CONFLICT,
+        )
 
     # block concurrent scans for the same repo
     in_flight = (

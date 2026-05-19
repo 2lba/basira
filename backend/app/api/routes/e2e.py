@@ -30,6 +30,7 @@ class SeedRequest(BaseModel):
     repo_full_name: str = "playwright-user/sample-repo"
     private: bool = False
     default_branch: str = "main"
+    extra_unconnected: list[str] = []
 
 
 class SeedResponse(BaseModel):
@@ -37,6 +38,7 @@ class SeedResponse(BaseModel):
     repo_id: str
     repo_full_name: str
     installation_id: int
+    unconnected_repo_ids: list[str] = []
 
 
 @router.post("/reset", status_code=status.HTTP_200_OK)
@@ -48,6 +50,9 @@ async def reset(db: AsyncSession = Depends(get_db)):
     await db.execute(delete(Scan))
     await db.execute(delete(InstallationRepository))
     await db.execute(delete(GithubInstallation))
+    from app.models.user_repository import UserRepository
+
+    await db.execute(delete(UserRepository))
     await db.execute(delete(Repository))
     await db.execute(delete(User).where(User.github_login.like("playwright%")))
     await db.commit()
@@ -75,7 +80,7 @@ async def seed(
     db.add(user)
     await db.flush()
 
-    # repository
+    # repository (connected via app installation)
     repo = Repository(
         github_repo_id=secrets.randbelow(10_000_000) + 1_000_000,
         owner=owner,
@@ -85,6 +90,7 @@ async def seed(
         private=body.private,
         review_enabled=True,
         severity_threshold="minor",
+        connected=True,
     )
     db.add(repo)
     await db.flush()
@@ -107,6 +113,32 @@ async def seed(
             repository_id=repo.id,
         )
     )
+    from app.models.user_repository import UserRepository
+
+    db.add(UserRepository(user_id=user.id, repository_id=repo.id))
+
+    # optional: extra repos the user can see via OAuth but hasn't installed
+    unconnected_ids: list[str] = []
+    for full in body.extra_unconnected:
+        if "/" not in full:
+            continue
+        ow, nm = full.split("/", 1)
+        extra = Repository(
+            github_repo_id=secrets.randbelow(10_000_000) + 1_000_000,
+            owner=ow,
+            name=nm,
+            full_name=full,
+            default_branch="main",
+            private=False,
+            review_enabled=True,
+            severity_threshold="minor",
+            connected=False,
+        )
+        db.add(extra)
+        await db.flush()
+        db.add(UserRepository(user_id=user.id, repository_id=extra.id))
+        unconnected_ids.append(str(extra.id))
+
     await db.commit()
     await db.refresh(user)
     await db.refresh(repo)
@@ -144,6 +176,7 @@ async def seed(
         repo_id=str(repo.id),
         repo_full_name=repo.full_name,
         installation_id=installation_id_int,
+        unconnected_repo_ids=unconnected_ids,
     )
 
 

@@ -23,6 +23,8 @@ class Repository(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     custom_rules: Mapped[str | None] = mapped_column(Text, nullable=True)
     model_override: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
+    connected: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     schedule_kind: Mapped[str] = mapped_column(String(16), default="none", nullable=False)
     schedule_dow: Mapped[int | None] = mapped_column(Integer, nullable=True)
     schedule_dom: Mapped[int | None] = mapped_column(Integer, nullable=True)

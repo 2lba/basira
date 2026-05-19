@@ -27,7 +27,9 @@ from app.integrations.github_oauth import (
     authorize_url,
     exchange_code,
     fetch_profile,
+    list_user_repos,
 )
+from app.services.repo_sync import sync_user_repos
 from app.models.user import User
 from app.schemas.auth import LoginUrlResponse, MeResponse
 from app.services.auth_service import (
@@ -172,6 +174,16 @@ async def github_callback(
         user = await upsert_user_from_github(db, profile, access_token)
     except AuthError as e:
         raise AppError(e.code, e.message, status.HTTP_503_SERVICE_UNAVAILABLE) from e
+
+    # discover all user-accessible repos so the dashboard isn't empty on
+    # first login; non-installed ones come back with connected=false.
+    try:
+        oauth_repos = await list_user_repos(access_token)
+        await sync_user_repos(db, user.id, oauth_repos)
+    except GithubOAuthError as e:
+        log.warning("oauth.repo_sync_failed", err=str(e))
+    except Exception:
+        log.exception("oauth.repo_sync_error", user_id=str(user.id))
 
     if ip:
         await clear_failures("oauth", ip)

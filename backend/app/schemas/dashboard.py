@@ -17,6 +17,7 @@ class RepoOut(BaseModel):
     ignored_paths: list[str] | None = None
     custom_rules: str | None = None
     model_override: str | None = None
+    connected: bool = False
     schedule_kind: str = "none"
     schedule_dow: int | None = None
     schedule_dom: int | None = None
