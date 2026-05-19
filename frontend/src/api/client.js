@@ -57,3 +57,7 @@ export const revokeShare = (id) =>
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
   });
 export const getPublicScan = (token) => api(`/share/${encodeURIComponent(token)}`);
+
+export const getSmtp = () => api(`/api/me/smtp`);
+export const updateSmtp = (body) =>
+  api(`/api/me/smtp`, { method: "PATCH", body: JSON.stringify(body) });

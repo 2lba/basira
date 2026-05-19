@@ -245,3 +245,19 @@ async def finalize_now(scan_id: str, db: AsyncSession = Depends(get_db)):
 
     await db.commit()
     return {"ok": True, "scan_id": str(scan.id), "score": scan.score}
+
+
+@router.get("/last-email")
+async def get_last_email():
+    from app.services.notifier import get_last_e2e_email
+
+    payload = await get_last_e2e_email()
+    return {"email": payload}
+
+
+@router.post("/last-email/clear")
+async def clear_last_email():
+    from app.services.notifier import clear_last_e2e_email
+
+    await clear_last_e2e_email()
+    return {"ok": True}

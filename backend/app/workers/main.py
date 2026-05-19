@@ -82,6 +82,7 @@ async def scan_repo(ctx, scan_id: str) -> dict:
     import uuid
 
     from app.db.session import AsyncSessionLocal
+    from app.services.notifier import notify_by_scan_id
     from app.services.scan_engine import run_scan
 
     log.info("worker.scan_repo.start", scan_id=scan_id)
@@ -89,15 +90,21 @@ async def scan_repo(ctx, scan_id: str) -> dict:
     async with AsyncSessionLocal() as db:
         try:
             outcome = await run_scan(db, sid)
+            result = {
+                "scan_id": scan_id,
+                "status": outcome.scan.status,
+                "findings": outcome.findings_created,
+                "score": outcome.scan.score,
+            }
         except Exception as e:
             log.exception("worker.scan_repo.failed", scan_id=scan_id)
-            return {"scan_id": scan_id, "status": "failed", "err": str(e)[:200]}
-        return {
-            "scan_id": scan_id,
-            "status": outcome.scan.status,
-            "findings": outcome.findings_created,
-            "score": outcome.scan.score,
-        }
+            result = {"scan_id": scan_id, "status": "failed", "err": str(e)[:200]}
+
+    try:
+        await notify_by_scan_id(AsyncSessionLocal, sid)
+    except Exception:
+        log.exception("worker.scan_repo.notify_failed", scan_id=scan_id)
+    return result
 
 
 class WorkerSettings:
