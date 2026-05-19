@@ -42,6 +42,7 @@ async def _clean_state():
                 text(
                     "TRUNCATE TABLE refresh_tokens, users, "
                     "github_installations, installation_repositories, "
+                    "user_repositories, scan_findings, scans, "
                     "review_comments, reviews, pull_requests, repositories, "
                     "jobs, webhook_events "
                     "RESTART IDENTITY CASCADE"
@@ -55,6 +56,12 @@ async def _clean_state():
         from app.workers.queue import close_pool
 
         await close_pool()
+        # reset cached singletons that hold sockets bound to this test's
+        # event loop. Without this, the next test's calls into auth_service
+        # or the worker queue crash with "Event loop is closed".
+        import app.services.auth_service as _auth_svc
+
+        _auth_svc._redis = None
 
 
 @pytest.fixture

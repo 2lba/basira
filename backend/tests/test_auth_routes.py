@@ -23,18 +23,19 @@ async def test_should_503_when_github_not_configured(client, monkeypatch):
     assert r.status_code == 503
 
 
-async def test_should_reject_callback_when_state_missing(client):
+async def test_should_redirect_with_state_mismatch_when_state_missing(client):
+    """Callback errors now redirect to the frontend with ?oauth_error=CODE
+    so the Login page can render a friendly banner."""
     r = await client.get("/auth/github/callback?code=abc&state=xyz", follow_redirects=False)
-    assert r.status_code == 400
-    body = r.json()
-    assert body["error"]["code"] == "OAUTH_STATE_MISMATCH"
+    assert r.status_code == 302
+    assert "oauth_error=OAUTH_STATE_MISMATCH" in r.headers["location"]
 
 
-async def test_should_reject_callback_when_state_mismatch(client):
+async def test_should_redirect_with_state_mismatch_when_state_differs(client):
     client.cookies.set("basira_oauth_state", "different")
     r = await client.get("/auth/github/callback?code=abc&state=xyz", follow_redirects=False)
-    assert r.status_code == 400
-    assert r.json()["error"]["code"] == "OAUTH_STATE_MISMATCH"
+    assert r.status_code == 302
+    assert "oauth_error=OAUTH_STATE_MISMATCH" in r.headers["location"]
 
 
 async def test_should_401_when_me_unauthenticated(client):
