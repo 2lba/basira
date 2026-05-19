@@ -181,17 +181,25 @@ def build_summary(counts: dict[str, int], files_scanned: int) -> str:
 
 
 async def _call_claude_for_chunk(
-    chunk: FileChunk, repo_full_name: str, custom_rules: str | None, model: str
+    chunk: FileChunk,
+    repo_full_name: str,
+    custom_rules: str | None,
+    model: str,
+    api_key: str | None = None,
 ) -> tuple[list[dict], int, int]:
     user = build_scan_user_prompt(
         [(f.path, f.content) for f in chunk.files], repo_full_name, custom_rules
     )
-    response = await call_claude(system=SCAN_SYSTEM_PROMPT, user=user, model=model)
+    response = await call_claude(
+        system=SCAN_SYSTEM_PROMPT, user=user, model=model, api_key=api_key
+    )
     try:
         data = parse_json_strict(response.text)
     except AnthropicError:
         stricter = user + "\n\nIMPORTANT: respond with ONLY the JSON object. No prose."
-        response = await call_claude(system=SCAN_SYSTEM_PROMPT, user=stricter, model=model)
+        response = await call_claude(
+            system=SCAN_SYSTEM_PROMPT, user=stricter, model=model, api_key=api_key
+        )
         data = parse_json_strict(response.text)
     raw = data.get("findings", []) if isinstance(data, dict) else []
     cleaned: list[dict] = []
@@ -239,6 +247,21 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
         scan.finished_at = datetime.now(UTC)
         await db.commit()
         raise ValueError("no installation")
+
+    # BYOK — fetch the user's Anthropic key BEFORE we touch GitHub. Fail
+    # fast with a clear, user-facing error so the user knows what to fix.
+    from app.services.user_api_key import get_user_anthropic_key
+
+    api_key_owner_id = scan.triggered_by_user_id or inst.user_id
+    user_anthropic_key: str | None = None
+    if api_key_owner_id is not None:
+        user_anthropic_key = await get_user_anthropic_key(db, api_key_owner_id)
+    if not user_anthropic_key:
+        scan.status = "failed"
+        scan.error = "MISSING_API_KEY: add your Anthropic API key in Settings"
+        scan.finished_at = datetime.now(UTC)
+        await db.commit()
+        raise AnthropicError("missing user anthropic api key")
 
     model = repo.model_override or settings.claude_model
     scan.status = "running"
@@ -312,7 +335,8 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
                 db, scan, pct, f"reviewing chunk {idx}/{len(chunks)}"
             )
             findings, t_in, t_out = await _call_claude_for_chunk(
-                chunk, repo.full_name, repo.custom_rules, model
+                chunk, repo.full_name, repo.custom_rules, model,
+                api_key=user_anthropic_key,
             )
             all_findings.extend(findings)
             total_in += t_in

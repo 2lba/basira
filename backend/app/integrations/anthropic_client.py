@@ -31,7 +31,14 @@ class ClaudeResponse:
 _client: AsyncAnthropic | None = None
 
 
-def _get_client() -> AsyncAnthropic:
+def _get_client(api_key: str | None = None) -> AsyncAnthropic:
+    """Return an Anthropic client. If `api_key` is passed (BYOK), build a
+    fresh client for that key — we don't cache per-user clients because the
+    hot path is one scan per process so cache misses are cheap and a global
+    map would grow unbounded across users. Falls back to the env key only
+    if no per-user key is provided (admin/testing path)."""
+    if api_key:
+        return AsyncAnthropic(api_key=api_key)
     global _client
     s = get_settings()
     if not s.anthropic_api_key:
@@ -57,6 +64,7 @@ async def call_claude(
     model: str | None = None,
     max_tokens: int | None = None,
     temperature: float | None = None,
+    api_key: str | None = None,
 ) -> ClaudeResponse:
     s = get_settings()
     chosen_model = model or s.claude_model
@@ -64,7 +72,7 @@ async def call_claude(
     chosen_temp = s.claude_temperature if temperature is None else temperature
 
     async def _do() -> ClaudeResponse:
-        client = _get_client()
+        client = _get_client(api_key)
         msg = await client.messages.create(
             model=chosen_model,
             max_tokens=chosen_max,
