@@ -61,6 +61,37 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         return self.app_env.lower() == "production"
 
+    def assert_production_safe(self) -> None:
+        """Fail fast if a production deployment is missing real secrets.
+        Called once at app startup. Each rule fires only when APP_ENV is
+        'production' — dev keeps using the defaults."""
+        if not self.is_production:
+            return
+        problems: list[str] = []
+        if self.secret_key in ("", "change-me"):
+            problems.append("SECRET_KEY must be set to a random string")
+        if not self.token_encryption_key:
+            problems.append("TOKEN_ENCRYPTION_KEY must be set (Fernet key)")
+        if "basira_dev_password" in self.database_url:
+            problems.append("DATABASE_URL still uses the dev password")
+        if not self.anthropic_api_key:
+            problems.append("ANTHROPIC_API_KEY must be set")
+        if not self.github_app_id:
+            problems.append("GITHUB_APP_ID must be set")
+        if not self.github_app_client_secret:
+            problems.append("GITHUB_APP_CLIENT_SECRET must be set")
+        if not self.github_app_webhook_secret:
+            problems.append("GITHUB_APP_WEBHOOK_SECRET must be set")
+        if self.app_debug:
+            problems.append("APP_DEBUG must be false in production")
+        if self.e2e_test_mode:
+            problems.append("E2E_TEST_MODE must be false in production")
+        if problems:
+            raise RuntimeError(
+                "refusing to boot in production with default/missing secrets:\n  - "
+                + "\n  - ".join(problems)
+            )
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
