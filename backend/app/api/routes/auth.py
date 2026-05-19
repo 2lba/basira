@@ -1,4 +1,4 @@
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from fastapi import APIRouter, Cookie, Depends, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
@@ -128,6 +128,22 @@ async def github_login_url(request: Request):
     return LoginUrlResponse(url=url)
 
 
+def _fail_to_frontend(code: str, description: str) -> RedirectResponse:
+    """Send the browser back to the frontend with a readable error rather
+    than blowing up with JSON 500. The Login page reads ?oauth_error= and
+    surfaces it. We also always clear the state cookie so the next attempt
+    starts clean."""
+    fe = get_settings().frontend_base_url.rstrip("/")
+    qs = urlencode({"oauth_error": code, "desc": description[:200]})
+    resp = RedirectResponse(
+        url=f"{fe}/?{qs}",
+        status_code=status.HTTP_302_FOUND,
+    )
+    resp.delete_cookie(CSRF_STATE_COOKIE, path="/")
+    resp.delete_cookie(POST_LOGIN_REDIRECT_COOKIE, path="/")
+    return resp
+
+
 @router.get("/github/callback")
 @limiter.limit(get_settings().rate_limit_auth)
 async def github_callback(
@@ -140,65 +156,104 @@ async def github_callback(
     next_cookie: str | None = Cookie(default=None, alias=POST_LOGIN_REDIRECT_COOKIE),
     db: AsyncSession = Depends(get_db),
 ):
+    # Each step has its own narrow except so we can surface a specific
+    # error code to the frontend. Anything unexpected falls through to
+    # OAUTH_INTERNAL with a stack trace in logs.
     if error:
-        raise AppError(
-            "OAUTH_DENIED",
-            error_description or error,
-            status.HTTP_400_BAD_REQUEST,
-        )
+        return _fail_to_frontend("OAUTH_DENIED", error_description or error)
     if not code or not state:
-        raise AppError("OAUTH_BAD_REQUEST", "missing code or state", status.HTTP_400_BAD_REQUEST)
+        return _fail_to_frontend("OAUTH_BAD_REQUEST", "missing code or state")
     if not state_cookie or not constant_time_eq(state, state_cookie):
-        raise AppError("OAUTH_STATE_MISMATCH", "state mismatch", status.HTTP_400_BAD_REQUEST)
+        return _fail_to_frontend(
+            "OAUTH_STATE_MISMATCH",
+            "session expired; please try signing in again",
+        )
 
     ip = request.client.host if request.client else None
     if ip and await is_locked_out("oauth", ip):
-        raise AppError(
+        return _fail_to_frontend(
             "RATE_LIMITED",
             "too many failed login attempts; try again later",
-            status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
+    # 1. exchange code for token
     try:
         access_token = await exchange_code(code, _redirect_uri())
-        profile = await fetch_profile(access_token)
     except GithubOAuthError as e:
         if ip:
             await record_failure("oauth", ip)
-        log.warning("oauth.exchange_failed", err=str(e))
-        raise AppError(
-            "OAUTH_FAILED", "github authorization failed", status.HTTP_400_BAD_REQUEST
-        ) from e
+        log.warning("oauth.callback.failed", step="exchange_code", err=str(e))
+        return _fail_to_frontend("OAUTH_TOKEN_EXCHANGE_FAILED", str(e))
+    except Exception as e:
+        log.exception("oauth.callback.failed", step="exchange_code")
+        return _fail_to_frontend(
+            "OAUTH_TOKEN_EXCHANGE_FAILED",
+            f"{e.__class__.__name__}: {str(e)[:120]}",
+        )
 
+    # 2. fetch user profile
+    try:
+        profile = await fetch_profile(access_token)
+    except GithubOAuthError as e:
+        log.warning("oauth.callback.failed", step="fetch_profile", err=str(e))
+        return _fail_to_frontend("OAUTH_USER_FETCH_FAILED", str(e))
+    except Exception as e:
+        log.exception("oauth.callback.failed", step="fetch_profile")
+        return _fail_to_frontend(
+            "OAUTH_USER_FETCH_FAILED",
+            f"{e.__class__.__name__}: {str(e)[:120]}",
+        )
+
+    # 3. persist user
     try:
         user = await upsert_user_from_github(db, profile, access_token)
     except AuthError as e:
-        raise AppError(e.code, e.message, status.HTTP_503_SERVICE_UNAVAILABLE) from e
+        log.warning("oauth.callback.failed", step="upsert_user", err=e.message)
+        return _fail_to_frontend("OAUTH_USER_PERSIST_FAILED", e.message)
+    except Exception as e:
+        await db.rollback()
+        log.exception("oauth.callback.failed", step="upsert_user")
+        return _fail_to_frontend(
+            "OAUTH_USER_PERSIST_FAILED",
+            f"{e.__class__.__name__}: {str(e)[:120]}",
+        )
 
-    # discover all user-accessible repos so the dashboard isn't empty on
-    # first login; non-installed ones come back with connected=false.
+    # 4. best-effort: discover OAuth-visible repos. Failure here is logged
+    #    but never blocks login; a user with no installed repos still gets
+    #    the dashboard with an empty state.
     try:
         oauth_repos = await list_user_repos(access_token)
         await sync_user_repos(db, user.id, oauth_repos)
     except GithubOAuthError as e:
-        log.warning("oauth.repo_sync_failed", err=str(e))
+        log.warning("oauth.repo_sync_skipped", err=str(e))
     except Exception:
+        await db.rollback()
         log.exception("oauth.repo_sync_error", user_id=str(user.id))
 
     if ip:
         await clear_failures("oauth", ip)
 
+    # 5. issue session
     try:
         access = issue_access_token(str(user.id), {"login": user.github_login})
     except CryptoError as e:
-        raise AppError("CRYPTO_NOT_CONFIGURED", str(e), status.HTTP_503_SERVICE_UNAVAILABLE) from e
+        log.warning("oauth.callback.failed", step="issue_access", err=str(e))
+        return _fail_to_frontend("OAUTH_SESSION_FAILED", str(e))
 
-    refresh_token, _ = await issue_refresh(
-        db,
-        user.id,
-        request.headers.get("user-agent"),
-        ip,
-    )
+    try:
+        refresh_token, _ = await issue_refresh(
+            db,
+            user.id,
+            request.headers.get("user-agent"),
+            ip,
+        )
+    except Exception as e:
+        await db.rollback()
+        log.exception("oauth.callback.failed", step="issue_refresh")
+        return _fail_to_frontend(
+            "OAUTH_SESSION_FAILED",
+            f"{e.__class__.__name__}: {str(e)[:120]}",
+        )
 
     log.info("auth.login", user_id=str(user.id), login=user.github_login)
 
