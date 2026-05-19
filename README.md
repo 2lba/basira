@@ -1,6 +1,11 @@
-# basira
+# Basira
+
+> We see what you don't.
 
 AI code reviews on every GitHub pull request. Open source. Self-hosted. Free.
+
+The name is Basira (Arabic: بصيرة) — insight, foresight. The tool reads your
+diffs and tells you what you missed before a reviewer does.
 
 Status: v0.1.0 — early, but feature-complete enough to dogfood. Not battle tested at scale.
 
@@ -43,16 +48,35 @@ Fill in `.env`:
 - `ANTHROPIC_API_KEY` — from https://console.anthropic.com
 - `GITHUB_APP_*` — see step 2
 
-### 2. register a github app
+### 2. set up the GitHub App
+
+basira talks to GitHub through a GitHub App that you own. The App's URL slug
+is what users see when they install it on a repo — it must match
+`GITHUB_APP_NAME` in your `.env`.
+
+For local development the default is `basira-dev`. Pick whatever slug GitHub
+gives you and set both:
+
+```
+GITHUB_APP_NAME=basira-dev          # appears in github.com/apps/{name}
+```
+
+Steps to register the App:
 
 1. Go to https://github.com/settings/apps → New GitHub App
-2. Homepage URL: wherever you host basira (or your repo URL while testing)
-3. Webhook URL: `https://your-domain/webhooks/github`
-4. Webhook secret: pick a long random string, put it in `.env` as `GITHUB_APP_WEBHOOK_SECRET`
-5. Permissions: Repository contents (read), Pull requests (read+write), Metadata (read), Email addresses (read)
-6. Subscribe to events: Pull request, Installation, Installation repositories
-7. Save. Note the App ID, Client ID, Client Secret. Generate a private key (.pem) and save it as `secrets/github-app-key.pem` with `chmod 600`.
-8. Fill `.env` with `GITHUB_APP_ID`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_PRIVATE_KEY_PATH=/run/secrets/github-app-key.pem`
+2. **GitHub App name**: must match `GITHUB_APP_NAME` (e.g. `basira-dev`). The
+   slug must be globally unique on GitHub — pick something specific to you.
+3. Homepage URL: wherever you host basira (or your repo URL while testing)
+4. Webhook URL: `https://your-domain/webhooks/github`
+5. Webhook secret: pick a long random string, put it in `.env` as `GITHUB_APP_WEBHOOK_SECRET`
+6. Permissions: Repository contents (read), Pull requests (read+write), Metadata (read), Email addresses (read)
+7. Subscribe to events: Pull request, Installation, Installation repositories
+8. Save. Note the App ID, Client ID, Client Secret. Generate a private key (.pem) and save it as `secrets/github-app-key.pem` with `chmod 600`.
+9. Fill `.env` with `GITHUB_APP_ID`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_PRIVATE_KEY_PATH=/run/secrets/github-app-key.pem`
+
+The "Install on GitHub" button inside the app builds its URL from
+`GITHUB_APP_NAME`, so if you ever rename the App on GitHub, update the env
+var to match.
 
 ### 3. boot it
 
