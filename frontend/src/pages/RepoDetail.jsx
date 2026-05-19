@@ -160,6 +160,10 @@ export default function RepoDetail() {
 
   const activeScan = (scans || []).find((s) => ACTIVE.has(s.status));
   const recentDone = (scans || []).filter((s) => !ACTIVE.has(s.status));
+  const lastFailedMissingKey =
+    recentDone[0] &&
+    recentDone[0].status === "failed" &&
+    (recentDone[0].error || "").includes("MISSING_API_KEY");
 
   function toggleSelect(scanId) {
     setSelected((prev) => {
@@ -241,6 +245,27 @@ export default function RepoDetail() {
           )}
         </div>
         {scanError && <p className="text-danger text-sm">{scanError}</p>}
+        {lastFailedMissingKey && (
+          <div
+            data-testid="repo-missing-key"
+            className="card border-warning/40"
+          >
+            <h3 className="text-sm uppercase tracking-wider text-warning">
+              no api key
+            </h3>
+            <p className="mt-2 text-fg-secondary text-sm">
+              the last scan failed because your account has no Anthropic API
+              key configured.
+            </p>
+            <Link
+              to="/settings/api-keys"
+              data-testid="repo-add-api-key"
+              className="btn btn-primary mt-4 inline-block"
+            >
+              add api key
+            </Link>
+          </div>
+        )}
         {activeScan && (
           <ActiveScanCard scan={activeScan} />
         )}

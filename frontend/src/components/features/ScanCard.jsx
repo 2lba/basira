@@ -81,16 +81,26 @@ export function ScanListRow({ scan }) {
           </div>
         </div>
       </div>
-      <CountsInline counts={scan.counts} status={scan.status} />
+      <CountsInline counts={scan.counts} status={scan.status} error={scan.error} />
     </Link>
   );
 }
 
-export function CountsInline({ counts, status }) {
+export function CountsInline({ counts, status, error }) {
   if (status === "running" || status === "pending") {
     return <span className="text-fg-muted text-xs">in progress</span>;
   }
   if (status === "failed") {
+    if ((error || "").includes("MISSING_API_KEY")) {
+      return (
+        <span
+          data-testid="counts-missing-key"
+          className="text-warning text-xs"
+        >
+          no api key
+        </span>
+      );
+    }
     return <span className="text-danger text-xs">failed</span>;
   }
   if (!counts || !counts.total) {
