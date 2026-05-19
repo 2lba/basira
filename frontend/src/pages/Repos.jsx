@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, GitBranch } from "lucide-react";
 import { listRepos } from "../api/client.js";
+import OnboardingTour from "../components/OnboardingTour.jsx";
 
 export default function Repos() {
   const [repos, setRepos] = useState(null);
@@ -29,6 +30,7 @@ export default function Repos() {
 
   return (
     <section>
+      <OnboardingTour />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">repositories</h1>
         <p className="mt-1 text-fg-secondary text-sm">
