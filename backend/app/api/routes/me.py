@@ -1,3 +1,6 @@
+import ipaddress
+from urllib.parse import urlparse
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,18 +19,66 @@ from app.schemas.auth import (
 router = APIRouter(prefix="/api/me", tags=["me"])
 
 
+# Cloud metadata endpoints + common loopback hostnames that an SSRF would
+# target. We block them on top of the IP-range checks below.
+_BLOCKED_HOSTS = {
+    "metadata.google.internal",
+    "metadata.goog",
+    "169.254.169.254",
+    "fd00:ec2::254",
+    "localhost",
+    "ip6-localhost",
+    "ip6-loopback",
+}
+
+
 def _validate_webhook_url(url: str, kind: str) -> str:
+    """Reject anything that isn't a public http(s) URL. Closes SSRF — without
+    this a user can point Slack/Discord at AWS IMDS, internal services, or
+    file:// and exfiltrate / probe."""
     url = url.strip()
-    if not url.startswith("https://") and not url.startswith("http://"):
-        raise AppError(
-            "BAD_URL",
-            "webhook url must start with http(s)://",
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-        )
     if len(url) > 2048:
         raise AppError(
             "BAD_URL",
             "webhook url too long",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise AppError(
+            "BAD_URL",
+            "webhook url must use http(s)://",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+    host = (parsed.hostname or "").lower()
+    if not host:
+        raise AppError(
+            "BAD_URL",
+            "webhook url is missing a host",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+    if host in _BLOCKED_HOSTS:
+        raise AppError(
+            "BAD_URL",
+            "webhook url points at an internal host",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+    # if the host parses as an IP literal, reject private/reserved ranges.
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        ip = None
+    if ip is not None and (
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_reserved
+        or ip.is_multicast
+        or ip.is_unspecified
+    ):
+        raise AppError(
+            "BAD_URL",
+            "webhook url points at an internal address",
             status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
     return url
