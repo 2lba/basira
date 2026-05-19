@@ -36,29 +36,29 @@ export default function ScoreChart({ scans }) {
             data={data}
             margin={{ top: 8, right: 8, bottom: 8, left: 0 }}
           >
-            <CartesianGrid stroke="#1f1f1f" strokeDasharray="3 3" />
+            <CartesianGrid stroke="#262626" strokeDasharray="3 3" />
             <XAxis
               dataKey="idx"
               stroke="#525252"
               tick={{ fontSize: 11 }}
               tickLine={false}
-              axisLine={{ stroke: "#1f1f1f" }}
+              axisLine={{ stroke: "#262626" }}
             />
             <YAxis
               stroke="#525252"
               domain={[0, 100]}
               tick={{ fontSize: 11 }}
               tickLine={false}
-              axisLine={{ stroke: "#1f1f1f" }}
+              axisLine={{ stroke: "#262626" }}
               width={32}
             />
             <Tooltip
               contentStyle={{
                 background: "#141414",
-                border: "1px solid #2a2a2a",
+                border: "1px solid #3f3f3f",
                 borderRadius: 8,
                 fontSize: 12,
-                color: "#f5f5f5",
+                color: "#fafafa",
               }}
               labelStyle={{ color: "#a3a3a3" }}
               formatter={(value, _name, ctx) => [
@@ -72,9 +72,9 @@ export default function ScoreChart({ scans }) {
             <Line
               type="monotone"
               dataKey="score"
-              stroke="#6366f1"
+              stroke="#06b6d4"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#6366f1" }}
+              dot={{ r: 3, fill: "#06b6d4" }}
               activeDot={{ r: 5 }}
               isAnimationActive={false}
             />

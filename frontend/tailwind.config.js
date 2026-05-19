@@ -8,22 +8,30 @@ export default {
         bg: "#0a0a0a",
         surface: "#141414",
         border: {
-          subtle: "#1f1f1f",
-          DEFAULT: "#2a2a2a",
+          subtle: "#262626",
+          DEFAULT: "#3f3f3f",
         },
         fg: {
-          DEFAULT: "#f5f5f5",
+          DEFAULT: "#fafafa",
           secondary: "#a3a3a3",
           muted: "#525252",
         },
-        accent: "#6366f1",
+        accent: {
+          DEFAULT: "#06b6d4",
+          hover: "#22d3ee",
+        },
         success: "#10b981",
         warning: "#f59e0b",
         danger: "#ef4444",
-        ai: "#8b5cf6",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        display: [
+          "Space Grotesk",
+          "Inter",
+          "system-ui",
+          "sans-serif",
+        ],
         mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
       borderRadius: {
