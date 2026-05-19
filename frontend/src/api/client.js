@@ -78,6 +78,23 @@ export const getSmtp = () => api(`/api/me/smtp`);
 export const updateSmtp = (body) =>
   api(`/api/me/smtp`, { method: "PATCH", body: JSON.stringify(body) });
 
+export const listApiKeys = () => api(`/api/me/api-keys`, { silent: true });
+export const putAnthropicKey = (key) =>
+  api(`/api/me/api-keys/anthropic`, {
+    method: "PUT",
+    body: JSON.stringify({ api_key: key }),
+    silent: true,
+  });
+export const deleteAnthropicKey = () =>
+  fetch(`${BASE}/api/me/api-keys/anthropic`, {
+    method: "DELETE",
+    credentials: "include",
+  }).then((r) => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  });
+export const testAnthropicKey = () =>
+  api(`/api/me/api-keys/anthropic/test`, { method: "POST", silent: true });
+
 export const getSlack = () => api(`/api/me/slack`);
 export const updateSlack = (body) =>
   api(`/api/me/slack`, { method: "PATCH", body: JSON.stringify(body) });
