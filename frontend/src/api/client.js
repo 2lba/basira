@@ -1,6 +1,9 @@
 import { showToast } from "../components/Toasts.jsx";
 
-const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+// Empty string = same-origin. When the frontend is served behind a reverse
+// proxy (e.g. ngrok) every backend path is proxied through Vite, so calls
+// stay in the same origin as the page and cookies follow.
+const BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export async function api(path, options = {}) {
   const { silent, ...rest } = options;
