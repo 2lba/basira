@@ -9,6 +9,7 @@ from app.core.logging import get_logger
 from app.models.installation import GithubInstallation, InstallationRepository
 from app.models.pull_request import PullRequest
 from app.models.repository import Repository
+from app.models.user import User
 from app.models.webhook_event import WebhookEvent
 from app.workers.queue import enqueue_review
 
@@ -99,23 +100,55 @@ async def upsert_repository(db: AsyncSession, repo_data: dict[str, Any]) -> Repo
     return repo
 
 
+async def _resolve_installation_owner(
+    db: AsyncSession, account: dict[str, Any]
+) -> "uuid.UUID | None":  # noqa: F821
+    """For a User-type installation, map the account back to a local user by
+    matching github_user_id (preferred) then github_login. Org installs leave
+    user_id NULL — they don't have a single owning user."""
+    import uuid as _uuid  # noqa: F401
+
+    if str(account.get("type", "")).lower() != "user":
+        return None
+    gh_id = account.get("id")
+    login = account.get("login")
+    if gh_id:
+        stmt = select(User).where(User.github_user_id == int(gh_id))
+        u = (await db.execute(stmt)).scalar_one_or_none()
+        if u is not None:
+            return u.id
+    if login:
+        stmt = select(User).where(User.github_login == str(login))
+        u = (await db.execute(stmt)).scalar_one_or_none()
+        if u is not None:
+            return u.id
+    return None
+
+
 async def upsert_installation(db: AsyncSession, inst_data: dict[str, Any]) -> GithubInstallation:
     inst_id = int(inst_data["id"])
     stmt = select(GithubInstallation).where(GithubInstallation.installation_id == inst_id)
     inst = (await db.execute(stmt)).scalar_one_or_none()
     account = inst_data.get("account", {}) or {}
+    owner_id = await _resolve_installation_owner(db, account)
     if inst is None:
         inst = GithubInstallation(
             installation_id=inst_id,
             account_login=str(account.get("login", "")),
             account_type=str(account.get("type", "User")),
             account_id=int(account.get("id", 0)),
+            user_id=owner_id,
         )
         db.add(inst)
     else:
         inst.account_login = str(account.get("login", inst.account_login))
         inst.account_type = str(account.get("type", inst.account_type))
         inst.account_id = int(account.get("id", inst.account_id))
+        # only fill user_id when we can resolve it AND it's currently blank,
+        # so a later GH-side reinstall doesn't reassign an installation
+        # silently.
+        if owner_id is not None and inst.user_id is None:
+            inst.user_id = owner_id
     await db.flush()
     return inst
 
@@ -222,14 +255,26 @@ async def process_event(db: AsyncSession, event_record: WebhookEvent) -> dict[st
 async def _link_installation_repos(
     db: AsyncSession, inst: GithubInstallation, repos: list[dict[str, Any]]
 ) -> None:
+    from app.models.user_repository import UserRepository
+
     for r in repos:
         repo = await upsert_repository(db, r)
+        repo.connected = True
         stmt = (
             pg_insert(InstallationRepository)
             .values(installation_id=inst.id, repository_id=repo.id)
             .on_conflict_do_nothing(index_elements=["installation_id", "repository_id"])
         )
         await db.execute(stmt)
+        # also surface the repo in the owning user's list so it appears on
+        # /api/repos right after the install webhook lands.
+        if inst.user_id is not None:
+            link_stmt = (
+                pg_insert(UserRepository)
+                .values(user_id=inst.user_id, repository_id=repo.id)
+                .on_conflict_do_nothing(index_elements=["user_id", "repository_id"])
+            )
+            await db.execute(link_stmt)
     await db.flush()
 
 
@@ -250,4 +295,13 @@ async def _unlink_installation_repos(
         link = (await db.execute(link_stmt)).scalar_one_or_none()
         if link is not None:
             link.deleted_at = now
+        # if no other live installation still links this repo, flip
+        # connected=False so the UI puts the "connect" button back.
+        remaining_stmt = select(InstallationRepository).where(
+            InstallationRepository.repository_id == repo.id,
+            InstallationRepository.deleted_at.is_(None),
+        )
+        remaining = (await db.execute(remaining_stmt)).scalar_one_or_none()
+        if remaining is None:
+            repo.connected = False
     await db.flush()
