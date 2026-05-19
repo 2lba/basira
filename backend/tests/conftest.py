@@ -40,7 +40,7 @@ async def _clean_state():
         async with engine.begin() as conn:
             await conn.execute(
                 text(
-                    "TRUNCATE TABLE refresh_tokens, users, "
+                    "TRUNCATE TABLE refresh_tokens, user_api_keys, users, "
                     "github_installations, installation_repositories, "
                     "user_repositories, scan_findings, scans, "
                     "review_comments, reviews, pull_requests, repositories, "
