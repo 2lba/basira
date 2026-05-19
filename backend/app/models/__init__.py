@@ -6,6 +6,7 @@ from app.models.repository import Repository
 from app.models.review import Review, ReviewComment
 from app.models.scan import Scan, ScanFinding
 from app.models.user import User
+from app.models.user_api_key import UserApiKey
 from app.models.user_repository import UserRepository
 from app.models.webhook_event import WebhookEvent
 
@@ -21,6 +22,7 @@ __all__ = [
     "Scan",
     "ScanFinding",
     "User",
+    "UserApiKey",
     "UserRepository",
     "WebhookEvent",
 ]
