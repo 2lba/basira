@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     rate_limit_webhook: str = "120/minute"
     rate_limit_user_hourly: str = "1000/hour"
 
+    e2e_test_mode: bool = False
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

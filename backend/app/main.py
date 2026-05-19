@@ -73,6 +73,12 @@ def create_app() -> FastAPI:
     app.include_router(reviews_router)
     app.include_router(scans_router)
 
+    if settings.e2e_test_mode:
+        from app.api.routes.e2e import router as e2e_router
+
+        app.include_router(e2e_router)
+        log.warning("e2e_test_mode enabled; /test/* routes mounted")
+
     return app
 
 

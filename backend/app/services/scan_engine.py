@@ -1,3 +1,4 @@
+import asyncio
 import re
 import uuid
 from dataclasses import dataclass, field
@@ -219,6 +220,9 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
         await db.commit()
         raise ValueError("repository not found")
 
+    if settings.e2e_test_mode:
+        return await _run_scan_e2e_stub(db, scan, repo)
+
     inst = await find_installation_for_repo(db, repo.id)
     if inst is None:
         scan.status = "failed"
@@ -358,3 +362,90 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
         await db.commit()
         log.exception("scan.failed", repo_id=str(scan.repository_id))
         raise
+
+
+async def _run_scan_e2e_stub(
+    db: AsyncSession, scan: Scan, repo: Repository
+) -> ScanOutcome:
+    """Deterministic scan path for end-to-end tests. Steps through progress so
+    the UI can render the progress bar, then emits canned findings."""
+    scan.status = "running"
+    scan.started_at = datetime.now(UTC)
+    scan.model = "claude-sonnet-4-5"
+    scan.ref = scan.ref or repo.default_branch or "main"
+    scan.head_sha = "deadbeefcafef00d1234567890abcdef12345678"
+
+    steps = [
+        (15, "fetching tree @ main"),
+        (40, "fetched 8 files"),
+        (70, "reviewing chunk 1/1"),
+        (95, "finalizing"),
+    ]
+    for pct, msg in steps:
+        await _set_progress(db, scan, pct, msg)
+        await asyncio.sleep(0.5)
+
+    findings = [
+        {
+            "path": "app/auth.py",
+            "line": 42,
+            "severity": "critical",
+            "category": "security",
+            "message": "Token compared with ==, vulnerable to timing attack.",
+            "suggestion": "use secrets.compare_digest(a, b)",
+            "confidence": 0.95,
+        },
+        {
+            "path": "app/db.py",
+            "line": 117,
+            "severity": "major",
+            "category": "performance",
+            "message": "N+1 query in user listing; preload memberships.",
+            "suggestion": None,
+            "confidence": 0.82,
+        },
+        {
+            "path": "app/views.py",
+            "line": 8,
+            "severity": "minor",
+            "category": "maintainability",
+            "message": "Function is 60 lines; consider extracting permission check.",
+            "suggestion": None,
+            "confidence": 0.6,
+        },
+        {
+            "path": "scripts/build.sh",
+            "line": None,
+            "severity": "nit",
+            "category": "style",
+            "message": "Missing trailing newline at end of file.",
+            "suggestion": None,
+            "confidence": 0.4,
+        },
+    ]
+    for f in findings:
+        db.add(
+            ScanFinding(
+                scan_id=scan.id,
+                path=f["path"],
+                line=f["line"],
+                severity=f["severity"],
+                category=f["category"],
+                message=f["message"],
+                suggestion=f["suggestion"],
+                confidence=f["confidence"],
+            )
+        )
+    counts = aggregate_counts(findings)
+    scan.counts = counts
+    scan.score = compute_score(counts)
+    scan.summary = build_summary(counts, 8)
+    scan.files_scanned = 8
+    scan.files_skipped = 2
+    scan.tokens_input = 4200
+    scan.tokens_output = 380
+    scan.cost_usd = 0.018
+    scan.status = "succeeded"
+    scan.finished_at = datetime.now(UTC)
+    await _set_progress(db, scan, 100, "done")
+    return ScanOutcome(scan=scan, findings_created=len(findings))
