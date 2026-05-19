@@ -24,6 +24,7 @@ async def review_pr(ctx, pull_request_id: str, extra: dict[str, Any] | None = No
 
     from app.db.session import AsyncSessionLocal
     from app.models.pull_request import PullRequest
+    from app.services.comment_poster import post_review_to_github
     from app.services.review_engine import run_review
 
     log.info("worker.review_pr.start", pr_id=pull_request_id, extra=extra or {})
@@ -41,12 +42,31 @@ async def review_pr(ctx, pull_request_id: str, extra: dict[str, Any] | None = No
             log.exception("worker.review_pr.failed", pr_id=pull_request_id)
             return {"pr_id": pull_request_id, "status": "failed", "err": str(e)[:200]}
 
+        if outcome.skipped_existing:
+            return {
+                "pr_id": pull_request_id,
+                "status": "cached",
+                "review_id": str(outcome.review.id),
+            }
+
+        try:
+            posted = await post_review_to_github(db, outcome.review)
+        except Exception as e:
+            log.exception("worker.review_pr.post_failed", pr_id=pull_request_id)
+            return {
+                "pr_id": pull_request_id,
+                "status": "review_succeeded_post_failed",
+                "review_id": str(outcome.review.id),
+                "comments": outcome.comments_created,
+                "err": str(e)[:200],
+            }
+
     return {
         "pr_id": pull_request_id,
         "status": outcome.review.status,
         "review_id": str(outcome.review.id),
         "comments": outcome.comments_created,
-        "cached": outcome.skipped_existing,
+        "github_review_id": posted.get("github_review_id"),
     }
 
 

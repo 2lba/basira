@@ -75,6 +75,30 @@ class InstallationClient:
             raise GithubApiError(r.status_code, r.text[:500])
         return r
 
+    @_retry()
+    async def _post(self, path: str, body: dict, accept: str = JSON_MEDIA):
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            r = await client.post(
+                f"{GH_API}{path}",
+                headers=await self._headers(accept),
+                json=body,
+            )
+        if r.status_code >= 400:
+            raise GithubApiError(r.status_code, r.text[:500])
+        return r
+
+    @_retry()
+    async def _patch(self, path: str, body: dict, accept: str = JSON_MEDIA):
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            r = await client.patch(
+                f"{GH_API}{path}",
+                headers=await self._headers(accept),
+                json=body,
+            )
+        if r.status_code >= 400:
+            raise GithubApiError(r.status_code, r.text[:500])
+        return r
+
     async def get_pr(self, owner: str, repo: str, number: int) -> dict[str, Any]:
         r = await self._get(f"/repos/{owner}/{repo}/pulls/{number}")
         return r.json()
@@ -113,6 +137,57 @@ class InstallationClient:
                 break
             page += 1
         return out
+
+    async def create_review(
+        self,
+        owner: str,
+        repo: str,
+        number: int,
+        *,
+        commit_id: str,
+        body: str,
+        event: str = "COMMENT",
+        comments: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "commit_id": commit_id,
+            "body": body,
+            "event": event,
+        }
+        if comments:
+            payload["comments"] = comments
+        r = await self._post(f"/repos/{owner}/{repo}/pulls/{number}/reviews", payload)
+        return r.json()
+
+    async def list_reviews(self, owner: str, repo: str, number: int) -> list[dict[str, Any]]:
+        r = await self._get(f"/repos/{owner}/{repo}/pulls/{number}/reviews")
+        return r.json()
+
+    async def update_review_body(
+        self,
+        owner: str,
+        repo: str,
+        number: int,
+        review_id: int,
+        body: str,
+    ) -> dict[str, Any]:
+        r = await self._put(
+            f"/repos/{owner}/{repo}/pulls/{number}/reviews/{review_id}",
+            {"body": body},
+        )
+        return r.json()
+
+    @_retry()
+    async def _put(self, path: str, body: dict, accept: str = JSON_MEDIA):
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            r = await client.put(
+                f"{GH_API}{path}",
+                headers=await self._headers(accept),
+                json=body,
+            )
+        if r.status_code >= 400:
+            raise GithubApiError(r.status_code, r.text[:500])
+        return r
 
 
 async def installation_client(installation_id: int) -> InstallationClient:
