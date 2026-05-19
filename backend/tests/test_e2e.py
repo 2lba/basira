@@ -8,6 +8,7 @@ import json
 
 from sqlalchemy import select
 
+from app.config import get_settings
 from app.core.webhook_sig import compute_signature
 from app.integrations.anthropic_client import ClaudeResponse
 from app.integrations.github_api import PrFile
@@ -16,7 +17,11 @@ from app.models.pull_request import PullRequest
 from app.models.review import Review, ReviewComment
 from app.workers.main import review_pr as worker_review_pr
 
-SECRET = "test_webhook_secret"
+
+def _secret() -> str:
+    # sign with whatever the running config has, so the test passes regardless
+    # of which secret docker-compose injected.
+    return get_settings().github_webhook_secret or "test_webhook_secret"
 
 
 async def _seed_install_and_link(db, repo_id_full_name=("acme/web", 5001), inst_id=99001):
@@ -169,7 +174,7 @@ async def test_e2e_webhook_to_posted_review(client, db, monkeypatch):
         headers={
             "X-GitHub-Event": "pull_request",
             "X-GitHub-Delivery": "e2e-1",
-            "X-Hub-Signature-256": compute_signature(body, SECRET),
+            "X-Hub-Signature-256": compute_signature(body, _secret()),
             "Content-Type": "application/json",
         },
     )

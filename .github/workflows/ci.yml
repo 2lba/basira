@@ -40,7 +40,7 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
       SECRET_KEY: ci-test-secret
       TOKEN_ENCRYPTION_KEY: dVBTW1fvoM_FcogEF4ThvfRKNU6QlWqQ-Gtykc8Qrok=
-      GITHUB_APP_WEBHOOK_SECRET: test_webhook_secret
+      GITHUB_WEBHOOK_SECRET: test_webhook_secret
 
     steps:
       - uses: actions/checkout@v4

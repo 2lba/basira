@@ -8,7 +8,7 @@ os.environ.setdefault(
     "postgresql+asyncpg://basira:basira_dev_password@postgres:5432/basira",
 )
 os.environ.setdefault("REDIS_URL", "redis://redis:6379/0")
-os.environ.setdefault("GITHUB_APP_WEBHOOK_SECRET", "test_webhook_secret")
+os.environ.setdefault("GITHUB_WEBHOOK_SECRET", "test_webhook_secret")
 
 import pytest
 import redis.asyncio as aioredis

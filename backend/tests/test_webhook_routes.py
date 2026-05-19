@@ -3,12 +3,18 @@ import json
 import pytest
 from sqlalchemy import func, select
 
+from app.config import get_settings
 from app.core.webhook_sig import compute_signature
 from app.models.pull_request import PullRequest
 from app.models.repository import Repository
 from app.models.webhook_event import WebhookEvent
 
-SECRET = "test_webhook_secret"
+
+def _secret() -> str:
+    return get_settings().github_webhook_secret or "test_webhook_secret"
+
+
+SECRET = _secret()
 
 
 def _pr_payload(action: str = "opened") -> dict:

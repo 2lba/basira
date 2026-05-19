@@ -46,7 +46,7 @@ Fill in `.env`:
 - `SECRET_KEY` — random string, generate with `python -c "import secrets; print(secrets.token_urlsafe(64))"`
 - `TOKEN_ENCRYPTION_KEY` — Fernet key, generate with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
 - `ANTHROPIC_API_KEY` — from https://console.anthropic.com
-- `GITHUB_APP_*` — see step 2
+- `GITHUB_APP_ID`, `GITHUB_APP_NAME`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_WEBHOOK_SECRET`, `GITHUB_PRIVATE_KEY_PATH` — see step 2
 
 ### 2. set up the GitHub App
 
@@ -68,11 +68,11 @@ Steps to register the App:
    slug must be globally unique on GitHub — pick something specific to you.
 3. Homepage URL: wherever you host basira (or your repo URL while testing)
 4. Webhook URL: `https://your-domain/webhooks/github`
-5. Webhook secret: pick a long random string, put it in `.env` as `GITHUB_APP_WEBHOOK_SECRET`
+5. Webhook secret: pick a long random string, put it in `.env` as `GITHUB_WEBHOOK_SECRET`
 6. Permissions: Repository contents (read), Pull requests (read+write), Metadata (read), Email addresses (read)
 7. Subscribe to events: Pull request, Installation, Installation repositories
 8. Save. Note the App ID, Client ID, Client Secret. Generate a private key (.pem) and save it as `secrets/github-app-key.pem` with `chmod 600`.
-9. Fill `.env` with `GITHUB_APP_ID`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_PRIVATE_KEY_PATH=/run/secrets/github-app-key.pem`
+9. Fill `.env` with `GITHUB_APP_ID`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_PRIVATE_KEY_PATH=/run/secrets/github-app-key.pem`
 
 The "Install on GitHub" button inside the app builds its URL from
 `GITHUB_APP_NAME`, so if you ever rename the App on GitHub, update the env

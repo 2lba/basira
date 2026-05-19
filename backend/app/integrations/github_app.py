@@ -29,9 +29,9 @@ _token_cache: dict[int, InstallationToken] = {}
 
 def _load_private_key() -> str:
     s = get_settings()
-    path = s.github_app_private_key_path
+    path = s.github_private_key_path
     if not path:
-        raise GithubAppError("GITHUB_APP_PRIVATE_KEY_PATH not configured")
+        raise GithubAppError("GITHUB_PRIVATE_KEY_PATH not configured")
     p = Path(path)
     if not p.exists():
         raise GithubAppError(f"private key file not found: {path}")
