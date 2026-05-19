@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     review_max_files: int = 50
     review_max_diff_bytes: int = 200_000
-    review_severity_threshold: str = "medium"
+    review_severity_threshold: str = "minor"
 
     rate_limit_general: str = "100/minute"
     rate_limit_auth: str = "5/minute"
