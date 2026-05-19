@@ -2,10 +2,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from app import __version__
+from app.api.routes.auth import router as auth_router
 from app.api.routes.health import router as health_router
 from app.config import get_settings
 from app.core.errors import (
@@ -16,8 +18,6 @@ from app.core.errors import (
     validation_error_handler,
 )
 from app.core.logging import get_logger, setup_logging
-from fastapi.middleware.cors import CORSMiddleware
-
 from app.core.middleware import CORSAlwaysOnMiddleware, SecurityHeadersMiddleware
 from app.core.rate_limit import limiter
 
@@ -63,6 +63,7 @@ def create_app() -> FastAPI:
     app.add_exception_handler(Exception, unhandled_error_handler)
 
     app.include_router(health_router)
+    app.include_router(auth_router)
 
     return app
 

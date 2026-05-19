@@ -41,9 +41,7 @@ async def http_error_handler(request: Request, exc: HTTPException) -> JSONRespon
     return error_response(code, msg, exc.status_code)
 
 
-async def validation_error_handler(
-    request: Request, exc: RequestValidationError
-) -> JSONResponse:
+async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     return error_response(
         "VALIDATION_ERROR",
         "request validation failed",

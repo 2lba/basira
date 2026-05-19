@@ -21,3 +21,9 @@ export async function api(path, options = {}) {
 
 export const health = () => api("/healthz");
 export const ready = () => api("/readyz");
+
+export const me = () => api("/auth/me");
+export const logout = () => api("/auth/logout", { method: "POST" });
+export const refreshSession = () => api("/auth/refresh", { method: "POST" });
+
+export const githubLoginUrl = () => `${BASE}/auth/github/login`;

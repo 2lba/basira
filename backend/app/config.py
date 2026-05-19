@@ -1,6 +1,5 @@
 from functools import lru_cache
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,13 +13,13 @@ class Settings(BaseSettings):
 
     app_env: str = "development"
     app_debug: bool = True
-    app_host: str = "0.0.0.0"
+    app_host: str = "0.0.0.0"  # noqa: S104
     app_port: int = 8000
     app_base_url: str = "http://localhost:8000"
     frontend_base_url: str = "http://localhost:5173"
     log_level: str = "INFO"
 
-    secret_key: str = "change-me"
+    secret_key: str = "change-me"  # noqa: S105
     token_encryption_key: str = ""
     jwt_algorithm: str = "HS256"
     jwt_access_ttl_minutes: int = 60

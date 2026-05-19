@@ -20,9 +20,7 @@ class GithubInstallation(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
         nullable=True,
     )
 
-    __table_args__ = (
-        Index("idx_github_installations_user_id", "user_id"),
-    )
+    __table_args__ = (Index("idx_github_installations_user_id", "user_id"),)
 
 
 class InstallationRepository(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
@@ -40,7 +38,11 @@ class InstallationRepository(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin)
     )
 
     __table_args__ = (
-        UniqueConstraint("installation_id", "repository_id", name="uq_installation_repositories_pair"),
+        UniqueConstraint(
+            "installation_id",
+            "repository_id",
+            name="uq_installation_repositories_pair",
+        ),
         Index("idx_installation_repositories_installation_id", "installation_id"),
         Index("idx_installation_repositories_repository_id", "repository_id"),
     )

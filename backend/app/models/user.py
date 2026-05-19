@@ -13,6 +13,4 @@ class User(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     avatar_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     access_token_encrypted: Mapped[str | None] = mapped_column(String(2048), nullable=True)
 
-    __table_args__ = (
-        Index("idx_users_github_login", "github_login"),
-    )
+    __table_args__ = (Index("idx_users_github_login", "github_login"),)
