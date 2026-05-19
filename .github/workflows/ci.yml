@@ -14,13 +14,13 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: reviewly
-          POSTGRES_USER: reviewly
-          POSTGRES_PASSWORD: reviewly_dev_password
+          POSTGRES_DB: basira
+          POSTGRES_USER: basira
+          POSTGRES_PASSWORD: basira_dev_password
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U reviewly -d reviewly"
+          --health-cmd "pg_isready -U basira -d basira"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -36,7 +36,7 @@ jobs:
 
     env:
       APP_ENV: test
-      DATABASE_URL: postgresql+asyncpg://reviewly:reviewly_dev_password@localhost:5432/reviewly
+      DATABASE_URL: postgresql+asyncpg://basira:basira_dev_password@localhost:5432/basira
       REDIS_URL: redis://localhost:6379/0
       SECRET_KEY: ci-test-secret
       TOKEN_ENCRYPTION_KEY: dVBTW1fvoM_FcogEF4ThvfRKNU6QlWqQ-Gtykc8Qrok=

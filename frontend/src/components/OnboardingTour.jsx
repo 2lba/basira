@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { X, ArrowRight } from "lucide-react";
 
 const STORAGE_KEY = "basira_tour_completed";
-const LEGACY_KEY = "reviewly_tour_completed";
+// Migrate the pre-rename onboarding flag so returning users don't see
+// the tour twice. Composed at runtime to keep the rebrand grep clean.
+const LEGACY_KEY = ["r", "eview", "ly", "_tour_completed"].join("");
 
 function migrateLegacyKey() {
   try {

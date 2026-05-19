@@ -6,7 +6,7 @@ Free alternative to CodeRabbit, fully self-hostable.
 
 Name: Basira (Arabic: بصيرة) — insight, foresight.
 Tagline: "We see what you don't."
-Previous working name: Reviewly (renamed during wave 4.5).
+Renamed from the prior working name during wave 4.5.
 
 ## Owner
 Abdulaziz AlQahtani (@2lba)
@@ -82,8 +82,8 @@ Work on items in order. Don't skip ahead. Complete each before next.
 - Always pin go.mod to minimum supported version, not local version
 - Never use special chars (@, !, /) in dev passwords (shell parsing breaks)
 - datetime.now(timezone.utc) - never datetime.utcnow (deprecated)
-- Renaming the project (Reviewly → Basira) required: full sed pass, recreating
-  the Postgres volume because the DB name changed, re-installing the frontend
+- Renaming the project to Basira required: full sed pass, recreating the
+  Postgres volume because the DB name changed, re-installing the frontend
   container's anonymous node_modules volume because `docker compose down -v`
   blows it away, and a localStorage migration for the onboarding flag so
   existing users don't see the tour twice.
