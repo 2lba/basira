@@ -65,7 +65,26 @@ async def exchange_code(code: str, redirect_uri: str) -> str:
     return token
 
 
+def _noreply_email(user_id: int, login: str) -> str:
+    """GitHub's official anonymous email for users who keep their address
+    private. Apps without the 'Email addresses' permission can't see the
+    real address but this address is deliverable through GitHub's relay."""
+    return f"{user_id}+{login}@users.noreply.github.com"
+
+
 async def fetch_profile(access_token: str) -> GithubProfile:
+    """Read the OAuth user. Email is best-effort:
+
+    1. /user.email — public email if the user exposes one
+    2. /user/emails — primary verified address (needs the App's "Email
+       addresses" permission; returns 403 otherwise)
+    3. {user_id}+{login}@users.noreply.github.com — GitHub's deliverable
+       anonymous relay; used so we always have a non-null string in DB and
+       /auth/me doesn't break for users who never installed the email
+       permission.
+    """
+    import logging
+
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/vnd.github+json",
@@ -78,15 +97,34 @@ async def fetch_profile(access_token: str) -> GithubProfile:
         user = ur.json()
         email = user.get("email")
         if not email:
-            er = await client.get(f"{GH_API}/user/emails")
-            if er.status_code == 200:
-                emails = er.json()
-                primary = next(
-                    (e for e in emails if e.get("primary") and e.get("verified")),
-                    None,
+            try:
+                er = await client.get(f"{GH_API}/user/emails")
+                if er.status_code == 200:
+                    emails = er.json()
+                    primary = next(
+                        (e for e in emails if e.get("primary") and e.get("verified")),
+                        None,
+                    )
+                    if primary:
+                        email = primary.get("email")
+                elif er.status_code in (403, 404):
+                    # GitHub App lacks the Email addresses permission, or the
+                    # user denied it. Not an error — fall through to noreply.
+                    logging.getLogger("basira.oauth").info(
+                        "fetch_profile.emails_unavailable status=%s", er.status_code
+                    )
+                else:
+                    logging.getLogger("basira.oauth").warning(
+                        "fetch_profile.emails_unexpected status=%s body=%s",
+                        er.status_code,
+                        er.text[:200],
+                    )
+            except httpx.HTTPError as e:
+                logging.getLogger("basira.oauth").warning(
+                    "fetch_profile.emails_request_failed err=%s", e
                 )
-                if primary:
-                    email = primary.get("email")
+    if not email:
+        email = _noreply_email(int(user["id"]), str(user["login"]))
     return GithubProfile(
         id=int(user["id"]),
         login=str(user["login"]),

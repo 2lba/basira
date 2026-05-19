@@ -22,6 +22,15 @@ class CORSAlwaysOnMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
         except Exception:
+            # log the traceback before swallowing — otherwise debugging 500s
+            # routed through this middleware is impossible.
+            from app.core.logging import get_logger
+
+            get_logger("basira.middleware").exception(
+                "middleware.unhandled",
+                path=str(request.url.path),
+                method=request.method,
+            )
             response = Response(
                 content='{"error":{"code":"INTERNAL","message":"internal server error"}}',
                 status_code=500,
