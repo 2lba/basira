@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { GitPullRequest } from "lucide-react";
 import { listReviews } from "../api/client.js";
+import EmptyState from "../components/ui/EmptyState.jsx";
+import { SkeletonHeader, SkeletonRows } from "../components/ui/Skeleton.jsx";
 
 const PAGE = 25;
 
@@ -21,16 +24,23 @@ export default function Reviews() {
 
   if (error) return <p className="text-danger">{error}</p>;
   if (items === null) {
-    return <div className="h-32 bg-surface rounded-card animate-pulse" />;
+    return (
+      <section data-testid="reviews-skeleton">
+        <SkeletonHeader />
+        <div className="mt-6">
+          <SkeletonRows count={3} />
+        </div>
+      </section>
+    );
   }
   if (items.length === 0 && offset === 0) {
     return (
-      <div className="card text-center py-16">
-        <h2 className="text-lg font-medium">no reviews yet</h2>
-        <p className="mt-2 text-fg-secondary text-sm">
-          Open a pull request on a connected repo to trigger your first review.
-        </p>
-      </div>
+      <EmptyState
+        testId="reviews-empty"
+        icon={<GitPullRequest size={22} />}
+        title="no reviews yet"
+        body="Open a pull request on a connected repo and reviewly will post AI feedback as comments."
+      />
     );
   }
 

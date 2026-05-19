@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Search } from "lucide-react";
 import { listAllScans } from "../api/client.js";
 import { ScoreCircle, CountsInline } from "../components/features/ScanCard.jsx";
+import EmptyState from "../components/ui/EmptyState.jsx";
+import { SkeletonHeader, SkeletonRows } from "../components/ui/Skeleton.jsx";
 
 const ACTIVE = new Set(["pending", "running"]);
 
@@ -34,16 +37,28 @@ export default function Scans() {
 
   if (error) return <p className="text-danger">{error}</p>;
   if (items === null) {
-    return <div className="h-32 bg-surface rounded-card animate-pulse" />;
+    return (
+      <section data-testid="scans-skeleton">
+        <SkeletonHeader />
+        <div className="mt-6">
+          <SkeletonRows count={3} />
+        </div>
+      </section>
+    );
   }
   if (items.length === 0) {
     return (
-      <div className="card text-center py-16">
-        <h2 className="text-lg font-medium">no scans yet</h2>
-        <p className="mt-2 text-fg-secondary text-sm">
-          Open a repository and click "scan now" to run one.
-        </p>
-      </div>
+      <EmptyState
+        testId="scans-empty"
+        icon={<Search size={22} />}
+        title="no scans yet"
+        body="Open a repository and click scan now to run a full-codebase AI review."
+        action={
+          <Link to="/" className="btn btn-primary">
+            choose a repository
+          </Link>
+        }
+      />
     );
   }
 

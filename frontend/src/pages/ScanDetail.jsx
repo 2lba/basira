@@ -23,6 +23,7 @@ import {
 } from "../api/client.js";
 import { ScoreCircle, SeverityBadge } from "../components/features/ScanCard.jsx";
 import { downloadMarkdown } from "../lib/scanMarkdown.js";
+import { SkeletonCard, SkeletonHeader } from "../components/ui/Skeleton.jsx";
 
 const ACTIVE = new Set(["pending", "running"]);
 
@@ -65,7 +66,15 @@ export default function ScanDetail() {
   const [search, setSearch] = useState("");
 
   if (err) return <p className="text-danger">{err}</p>;
-  if (!scan) return <p className="text-fg-muted">loading...</p>;
+  if (!scan) {
+    return (
+      <section data-testid="scan-skeleton" className="space-y-6">
+        <SkeletonHeader />
+        <SkeletonCard lines={3} />
+        <SkeletonCard lines={4} />
+      </section>
+    );
+  }
 
   const isActive = ACTIVE.has(scan.status);
   const q = search.trim().toLowerCase();

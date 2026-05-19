@@ -9,6 +9,7 @@ import {
 } from "../api/client.js";
 import { ScanListRow } from "../components/features/ScanCard.jsx";
 import ScoreChart from "../components/features/ScoreChart.jsx";
+import { SkeletonCard, SkeletonHeader } from "../components/ui/Skeleton.jsx";
 
 const SEVERITIES = ["nit", "minor", "major", "critical"];
 const MODELS = ["", "claude-sonnet-4-5", "claude-opus-4-5", "claude-haiku-4-5"];
@@ -77,7 +78,15 @@ export default function RepoDetail() {
   }, [id]);
 
   if (error) return <p className="text-danger">{error}</p>;
-  if (!repo || !draft) return <p className="text-fg-muted">loading...</p>;
+  if (!repo || !draft) {
+    return (
+      <section data-testid="repo-skeleton" className="space-y-6">
+        <SkeletonHeader />
+        <SkeletonCard lines={3} />
+        <SkeletonCard lines={2} />
+      </section>
+    );
+  }
 
   async function save() {
     setSaving(true);

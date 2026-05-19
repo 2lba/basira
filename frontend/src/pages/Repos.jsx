@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { ChevronRight, GitBranch } from "lucide-react";
 import { listRepos } from "../api/client.js";
 import OnboardingTour from "../components/OnboardingTour.jsx";
+import EmptyState from "../components/ui/EmptyState.jsx";
+import { SkeletonHeader, SkeletonRows } from "../components/ui/Skeleton.jsx";
 
 export default function Repos() {
   const [repos, setRepos] = useState(null);
@@ -25,7 +27,7 @@ export default function Repos() {
     return <SkeletonList />;
   }
   if (repos.length === 0) {
-    return <EmptyState />;
+    return <ReposEmpty />;
   }
 
   return (
@@ -63,25 +65,34 @@ export default function Repos() {
   );
 }
 
-function EmptyState() {
+function ReposEmpty() {
   return (
-    <div className="card text-center py-16">
-      <h2 className="text-lg font-medium">no repositories yet</h2>
-      <p className="mt-2 text-fg-secondary text-sm">
-        Install the reviewly GitHub App on a repository to get started.
-      </p>
-    </div>
+    <EmptyState
+      testId="repos-empty"
+      icon={<GitBranch size={22} />}
+      title="no repositories yet"
+      body="Install the reviewly GitHub App on a repository to get started."
+      action={
+        <a
+          data-testid="install-app-link"
+          href="https://github.com/apps/reviewly"
+          target="_blank"
+          rel="noreferrer noopener"
+          className="btn btn-primary"
+        >
+          install on GitHub
+        </a>
+      }
+    />
   );
 }
 
 function SkeletonList() {
   return (
-    <section>
-      <div className="h-7 w-40 bg-surface rounded animate-pulse mb-6" />
-      <div className="space-y-2">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="card h-16 animate-pulse" />
-        ))}
+    <section data-testid="repos-skeleton">
+      <SkeletonHeader />
+      <div className="mt-6">
+        <SkeletonRows count={3} />
       </div>
     </section>
   );
