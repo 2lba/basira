@@ -9,7 +9,7 @@ from app.models.repository import Repository
 from app.models.scan import Scan
 from app.workers.queue import enqueue_scan
 
-log = get_logger("reviewly.scheduler")
+log = get_logger("basira.scheduler")
 
 ALLOWED_KINDS = {"none", "daily", "weekly", "monthly"}
 

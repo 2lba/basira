@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     jwt_access_ttl_minutes: int = 60
     jwt_refresh_ttl_days: int = 7
 
-    database_url: str = "postgresql+asyncpg://reviewly:reviewly_dev_password@postgres:5432/reviewly"
+    database_url: str = "postgresql+asyncpg://basira:basira_dev_password@postgres:5432/basira"
     redis_url: str = "redis://redis:6379/0"
 
     anthropic_api_key: str = ""
@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     github_app_client_secret: str = ""
     github_app_private_key_path: str = ""
     github_app_webhook_secret: str = ""
-    github_app_name: str = "reviewly"
+    github_app_name: str = "basira"
 
     cors_origins: str = "http://localhost:5173"
 

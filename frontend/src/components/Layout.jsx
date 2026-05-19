@@ -28,7 +28,7 @@ export default function Layout({ user, onLogout }) {
       <ShortcutsModal open={help} onClose={() => setHelp(false)} />
       <aside className="w-60 border-r border-border-subtle flex flex-col">
         <div className="px-6 py-5 border-b border-border-subtle">
-          <span className="text-fg font-semibold tracking-tight">reviewly</span>
+          <span className="text-fg font-semibold tracking-tight">basira</span>
           <span className="ml-2 text-fg-muted text-xs">v0.1.0</span>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">

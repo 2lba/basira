@@ -27,7 +27,7 @@ from app.services.scan_prompt import (
     validate_finding,
 )
 
-log = get_logger("reviewly.scan")
+log = get_logger("basira.scan")
 
 MAX_FINDINGS_PER_SCAN = 200
 MAX_FILES = 400

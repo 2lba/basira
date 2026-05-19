@@ -50,7 +50,7 @@ async def _link_repo(db, user, owner="acme", name="app", github_repo_id=100):
 
 def _auth(client, user):
     token = issue_access_token(str(user.id), {"login": user.github_login})
-    client.cookies.set("reviewly_access", token)
+    client.cookies.set("basira_access", token)
 
 
 async def test_should_list_only_user_repos(client, db):

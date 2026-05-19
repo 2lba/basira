@@ -9,7 +9,7 @@ from app.models.installation import InstallationRepository
 from app.models.repository import Repository
 from app.models.user_repository import UserRepository
 
-log = get_logger("reviewly.repo_sync")
+log = get_logger("basira.repo_sync")
 
 
 async def sync_user_repos(

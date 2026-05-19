@@ -7,7 +7,7 @@ from app.config import get_settings
 from app.core.logging import get_logger, setup_logging
 
 setup_logging()
-log = get_logger("reviewly.worker")
+log = get_logger("basira.worker")
 settings = get_settings()
 
 

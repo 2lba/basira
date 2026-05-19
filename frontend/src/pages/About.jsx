@@ -1,19 +1,19 @@
 import { Github, ExternalLink } from "lucide-react";
 
 const VERSION = "0.1.0";
-const GH_URL = "https://github.com/2lba/reviewly";
-const DOCS_URL = "https://github.com/2lba/reviewly#readme";
+const GH_URL = "https://github.com/2lba/basira";
+const DOCS_URL = "https://github.com/2lba/basira#readme";
 const AUTHOR_URL = "https://github.com/2lba";
 
 export default function About() {
   return (
     <section className="max-w-2xl" data-testid="about-page">
-      <h1 className="text-2xl font-semibold tracking-tight">about reviewly</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">about basira</h1>
       <p className="mt-1 text-fg-secondary text-sm">version {VERSION}</p>
 
       <div className="mt-6 card">
         <p className="text-fg leading-relaxed">
-          Reviewly is an open source, self-hostable AI code reviewer for GitHub
+          Basira is an open source, self-hostable AI code reviewer for GitHub
           pull requests. Free alternative to closed-source review tools, with
           transparent prompts and zero vendor lock-in.
         </p>

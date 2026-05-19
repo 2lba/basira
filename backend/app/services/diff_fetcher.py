@@ -10,7 +10,7 @@ from app.models.installation import GithubInstallation, InstallationRepository
 from app.models.pull_request import PullRequest
 from app.models.repository import Repository
 
-log = get_logger("reviewly.diff")
+log = get_logger("basira.diff")
 
 
 # default skip patterns: lock files, minified, build artifacts, migrations, vendored

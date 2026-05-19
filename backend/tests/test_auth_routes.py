@@ -31,7 +31,7 @@ async def test_should_reject_callback_when_state_missing(client):
 
 
 async def test_should_reject_callback_when_state_mismatch(client):
-    client.cookies.set("reviewly_oauth_state", "different")
+    client.cookies.set("basira_oauth_state", "different")
     r = await client.get("/auth/github/callback?code=abc&state=xyz", follow_redirects=False)
     assert r.status_code == 400
     assert r.json()["error"]["code"] == "OAUTH_STATE_MISMATCH"

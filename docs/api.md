@@ -1,6 +1,6 @@
 # api
 
-All authenticated endpoints expect the `reviewly_access` cookie set by the login flow. Errors use a consistent envelope:
+All authenticated endpoints expect the `basira_access` cookie set by the login flow. Errors use a consistent envelope:
 
 ```json
 { "error": { "code": "STRING_CODE", "message": "human readable", "details": {} } }

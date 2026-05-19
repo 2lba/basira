@@ -26,7 +26,7 @@ from app.services.prompt import (
     validate_finding,
 )
 
-log = get_logger("reviewly.review")
+log = get_logger("basira.review")
 
 MAX_FINDINGS_PER_REVIEW = 30
 DEFAULT_CONFIDENCE_THRESHOLD = 0.5

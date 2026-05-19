@@ -1,4 +1,4 @@
-# Reviewly - AI Code Reviewer
+# Basira - AI Code Reviewer
 
 ## Project Overview
 Open source AI-powered code reviewer for GitHub Pull Requests.
@@ -440,7 +440,7 @@ it theoretically impossible.
 
 ## Project Structure
 
-reviewly/
+basira/
 ├── backend/
 │   ├── app/
 │   │   ├── api/          # FastAPI routes (one file per resource)
@@ -498,7 +498,7 @@ reviewly/
 ## Brand & Naming
 
 ### Product Name
-- Working name: Reviewly (placeholder, change before v1.0)
+- Working name: Basira (placeholder, change before v1.0)
 - Alternative ideas to consider before release:
   - PRReview (descriptive)
   - CodeWise
@@ -509,7 +509,7 @@ reviewly/
 
 ### Domain Strategy
 - Not buying domain until product proven
-- GitHub Pages for landing initially: 2lba.github.io/reviewly
+- GitHub Pages for landing initially: 2lba.github.io/basira
 
 ### Tagline Drafts
 - "AI code reviews. Open source. Self-hosted."

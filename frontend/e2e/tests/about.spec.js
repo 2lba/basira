@@ -6,13 +6,13 @@ test.describe("about page", () => {
     await page.goto("/about");
     await expect(page.getByTestId("about-page")).toBeVisible();
     await expect(page.locator("body")).toContainText("version 0.1.0");
-    await expect(page.locator("body")).toContainText(/Reviewly is/);
+    await expect(page.locator("body")).toContainText(/Basira is/);
     await expect(page.locator("body")).toContainText(/Abdulaziz AlQahtani/);
 
     const github = page.getByTestId("about-github");
     await expect(github).toHaveAttribute(
       "href",
-      "https://github.com/2lba/reviewly",
+      "https://github.com/2lba/basira",
     );
     const author = page.getByTestId("about-author");
     await expect(author).toHaveAttribute("href", "https://github.com/2lba");

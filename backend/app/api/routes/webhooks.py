@@ -17,7 +17,7 @@ from app.services.webhooks import (
     record_event,
 )
 
-log = get_logger("reviewly.webhook")
+log = get_logger("basira.webhook")
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
 

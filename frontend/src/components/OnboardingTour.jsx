@@ -1,11 +1,26 @@
 import { useEffect, useState } from "react";
 import { X, ArrowRight } from "lucide-react";
 
-const STORAGE_KEY = "reviewly_tour_completed";
+const STORAGE_KEY = "basira_tour_completed";
+const LEGACY_KEY = "reviewly_tour_completed";
+
+function migrateLegacyKey() {
+  try {
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy && !localStorage.getItem(STORAGE_KEY)) {
+      localStorage.setItem(STORAGE_KEY, legacy);
+    }
+    if (legacy !== null) {
+      localStorage.removeItem(LEGACY_KEY);
+    }
+  } catch {
+    // localStorage may be unavailable
+  }
+}
 
 const STEPS = [
   {
-    title: "welcome to reviewly",
+    title: "welcome to basira",
     body: "These are the GitHub repositories you've connected. Each row is a repo you can review with AI.",
   },
   {
@@ -20,6 +35,7 @@ const STEPS = [
 
 export function isTourDone() {
   try {
+    migrateLegacyKey();
     return localStorage.getItem(STORAGE_KEY) === "1";
   } catch {
     return false;

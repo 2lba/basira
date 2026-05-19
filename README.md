@@ -1,4 +1,4 @@
-# reviewly
+# basira
 
 AI code reviews on every GitHub pull request. Open source. Self-hosted. Free.
 
@@ -6,9 +6,9 @@ Status: v0.1.0 — early, but feature-complete enough to dogfood. Not battle tes
 
 ## what it does
 
-1. You install the reviewly GitHub App on your repo.
+1. You install the basira GitHub App on your repo.
 2. Someone opens a pull request.
-3. reviewly fetches the diff, sends it to Claude with a structured prompt, and posts a review back to the PR — summary comment plus inline comments where it matters.
+3. basira fetches the diff, sends it to Claude with a structured prompt, and posts a review back to the PR — summary comment plus inline comments where it matters.
 4. You read, dismiss, or fix.
 
 ## stack
@@ -32,7 +32,7 @@ You need:
 
 ```
 git clone <this repo>
-cd reviewly
+cd basira
 cp .env.example .env
 ```
 
@@ -46,7 +46,7 @@ Fill in `.env`:
 ### 2. register a github app
 
 1. Go to https://github.com/settings/apps → New GitHub App
-2. Homepage URL: wherever you host reviewly (or your repo URL while testing)
+2. Homepage URL: wherever you host basira (or your repo URL while testing)
 3. Webhook URL: `https://your-domain/webhooks/github`
 4. Webhook secret: pick a long random string, put it in `.env` as `GITHUB_APP_WEBHOOK_SECRET`
 5. Permissions: Repository contents (read), Pull requests (read+write), Metadata (read), Email addresses (read)
@@ -62,7 +62,7 @@ make up
 make migrate
 ```
 
-Then open http://localhost:5173 — sign in with GitHub and install the app on a repo. Open a PR. Watch reviewly comment.
+Then open http://localhost:5173 — sign in with GitHub and install the app on a repo. Open a PR. Watch basira comment.
 
 For development the backend listens on port 8001 on the host (mapped from container port 8000).
 
@@ -80,18 +80,18 @@ For development the backend listens on port 8001 on the host (mapped from contai
 
 ## honest comparison vs CodeRabbit
 
-reviewly is aiming for roughly 60-70% feature parity. Things missing that CodeRabbit has:
+basira is aiming for roughly 60-70% feature parity. Things missing that CodeRabbit has:
 
-- chat replies on review threads (you can't ask reviewly follow-up questions yet)
+- chat replies on review threads (you can't ask basira follow-up questions yet)
 - custom rules engine beyond plain-text instructions
 - learning from feedback / training on your team's preferences
 - multi-model consensus
 - a polished marketing site
 
-What reviewly does better:
+What basira does better:
 
 - free, self-hosted, no per-seat pricing
-- transparent prompts (read `app/services/prompt.py` to see exactly what reviewly tells Claude)
+- transparent prompts (read `app/services/prompt.py` to see exactly what basira tells Claude)
 - your code never leaves your infra except for the Claude API call
 
 ## limits in v0.1.0

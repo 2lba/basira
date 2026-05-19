@@ -53,7 +53,7 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
     from app.core.logging import get_logger
 
-    get_logger("reviewly.errors").error(
+    get_logger("basira.errors").error(
         "unhandled_exception",
         path=str(request.url.path),
         method=request.method,

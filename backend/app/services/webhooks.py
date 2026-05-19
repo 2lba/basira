@@ -12,7 +12,7 @@ from app.models.repository import Repository
 from app.models.webhook_event import WebhookEvent
 from app.workers.queue import enqueue_review
 
-log = get_logger("reviewly.webhooks")
+log = get_logger("basira.webhooks")
 
 SUPPORTED_EVENTS = {
     "ping",

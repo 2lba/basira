@@ -17,5 +17,5 @@ async def test_should_return_version_when_root_called():
         r = await ac.get("/")
     assert r.status_code == 200
     data = r.json()
-    assert data["name"] == "reviewly"
+    assert data["name"] == "basira"
     assert "version" in data

@@ -8,10 +8,10 @@ from app.core.errors import AppError
 from app.db.session import get_db
 from app.models.user import User
 
-ACCESS_COOKIE = "reviewly_access"
-REFRESH_COOKIE = "reviewly_refresh"
-CSRF_STATE_COOKIE = "reviewly_oauth_state"
-POST_LOGIN_REDIRECT_COOKIE = "reviewly_post_login"
+ACCESS_COOKIE = "basira_access"
+REFRESH_COOKIE = "basira_refresh"
+CSRF_STATE_COOKIE = "basira_oauth_state"
+POST_LOGIN_REDIRECT_COOKIE = "basira_post_login"
 
 
 async def current_user(

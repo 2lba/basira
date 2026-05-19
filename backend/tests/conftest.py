@@ -5,7 +5,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret")
 os.environ.setdefault("TOKEN_ENCRYPTION_KEY", "dVBTW1fvoM_FcogEF4ThvfRKNU6QlWqQ-Gtykc8Qrok=")
 os.environ.setdefault(
     "DATABASE_URL",
-    "postgresql+asyncpg://reviewly:reviewly_dev_password@postgres:5432/reviewly",
+    "postgresql+asyncpg://basira:basira_dev_password@postgres:5432/basira",
 )
 os.environ.setdefault("REDIS_URL", "redis://redis:6379/0")
 os.environ.setdefault("GITHUB_APP_WEBHOOK_SECRET", "test_webhook_secret")

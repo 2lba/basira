@@ -29,7 +29,7 @@ from app.core.middleware import CORSAlwaysOnMiddleware, SecurityHeadersMiddlewar
 from app.core.rate_limit import limiter
 
 setup_logging()
-log = get_logger("reviewly.api")
+log = get_logger("basira.api")
 settings = get_settings()
 
 
@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="reviewly",
+        title="basira",
         version=__version__,
         docs_url="/docs" if not settings.is_production else None,
         redoc_url=None,
@@ -93,4 +93,4 @@ app = create_app()
 
 @app.get("/")
 async def root() -> dict[str, str]:
-    return {"name": "reviewly", "version": __version__}
+    return {"name": "basira", "version": __version__}

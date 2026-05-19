@@ -43,7 +43,7 @@ from app.services.auth_service import (
     upsert_user_from_github,
 )
 
-log = get_logger("reviewly.auth")
+log = get_logger("basira.auth")
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
@@ -249,7 +249,7 @@ async def logout(
 
 
 def _install_url() -> str:
-    name = get_settings().github_app_name or "reviewly"
+    name = get_settings().github_app_name or "basira"
     return f"https://github.com/apps/{name}/installations/new"
 
 

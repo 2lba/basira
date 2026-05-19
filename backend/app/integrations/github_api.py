@@ -12,7 +12,7 @@ from tenacity import (
 from app.core.logging import get_logger
 from app.integrations.github_app import GithubAppError, get_installation_token
 
-log = get_logger("reviewly.github_api")
+log = get_logger("basira.github_api")
 
 GH_API = "https://api.github.com"
 DIFF_MEDIA = "application/vnd.github.v3.diff"
@@ -60,7 +60,7 @@ class InstallationClient:
             "Authorization": f"Bearer {token}",
             "Accept": accept,
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "reviewly/0.1",
+            "User-Agent": "basira/0.1",
         }
 
     @_retry()

@@ -6,7 +6,7 @@ export default function ApiKeysTab() {
           api keys
         </h2>
         <p className="mt-2 text-fg-secondary text-sm">
-          Personal API keys for programmatic access to reviewly will land here.
+          Personal API keys for programmatic access to basira will land here.
           Coming in a later release.
         </p>
         <p className="mt-2 text-fg-muted text-xs">No keys to manage yet.</p>

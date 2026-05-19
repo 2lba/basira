@@ -14,7 +14,7 @@ from app.models.repository import Repository
 from app.models.scan import Scan
 from app.models.user import User
 
-log = get_logger("reviewly.notifier")
+log = get_logger("basira.notifier")
 
 _E2E_LAST_EMAIL_KEY = "e2e:last_email"
 _WEBHOOK_TIMEOUT = 10.0
@@ -22,10 +22,10 @@ _WEBHOOK_TIMEOUT = 10.0
 
 def _scan_subject(scan: Scan, repo: Repository) -> str:
     if scan.status == "succeeded":
-        return f"[reviewly] Scan of {repo.full_name} complete — score {scan.score}/100"
+        return f"[basira] Scan of {repo.full_name} complete — score {scan.score}/100"
     if scan.status == "failed":
-        return f"[reviewly] Scan of {repo.full_name} failed"
-    return f"[reviewly] Scan of {repo.full_name} {scan.status}"
+        return f"[basira] Scan of {repo.full_name} failed"
+    return f"[basira] Scan of {repo.full_name} {scan.status}"
 
 
 def _scan_body(scan: Scan, repo: Repository, frontend_url: str) -> str:
@@ -215,7 +215,7 @@ def _build_slack_payload(
         scan.status, ":hourglass_flowing_sand:"
     )
     text = (
-        f"{status_emoji} *Reviewly scan {scan.status}* — `{repo.full_name}`"
+        f"{status_emoji} *Basira scan {scan.status}* — `{repo.full_name}`"
     )
     sections: list[str] = [score_line, f"*Findings:* {summary}"]
     if scan.ref:
@@ -292,7 +292,7 @@ def _build_discord_payload(
         )
 
     embed = {
-        "title": f"Reviewly scan: {repo.full_name}",
+        "title": f"Basira scan: {repo.full_name}",
         "url": report_url,
         "color": _discord_color(scan),
         "fields": fields,

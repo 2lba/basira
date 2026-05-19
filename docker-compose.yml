@@ -1,25 +1,25 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: reviewly-postgres
+    container_name: basira-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-reviewly}
-      POSTGRES_USER: ${POSTGRES_USER:-reviewly}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-reviewly_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-basira}
+      POSTGRES_USER: ${POSTGRES_USER:-basira}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-basira_dev_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-reviewly} -d ${POSTGRES_DB:-reviewly}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-basira} -d ${POSTGRES_DB:-basira}"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: reviewly-redis
+    container_name: basira-redis
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
@@ -36,12 +36,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: reviewly-backend
+    container_name: basira-backend
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-reviewly}:${POSTGRES_PASSWORD:-reviewly_dev_password}@postgres:5432/${POSTGRES_DB:-reviewly}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-basira}:${POSTGRES_PASSWORD:-basira_dev_password}@postgres:5432/${POSTGRES_DB:-basira}
       REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
@@ -63,12 +63,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: reviewly-worker
+    container_name: basira-worker
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-reviewly}:${POSTGRES_PASSWORD:-reviewly_dev_password}@postgres:5432/${POSTGRES_DB:-reviewly}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-basira}:${POSTGRES_PASSWORD:-basira_dev_password}@postgres:5432/${POSTGRES_DB:-basira}
       REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
@@ -84,7 +84,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: dev
-    container_name: reviewly-frontend
+    container_name: basira-frontend
     restart: unless-stopped
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}

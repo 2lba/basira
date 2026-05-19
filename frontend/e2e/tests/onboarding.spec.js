@@ -6,7 +6,7 @@ test.describe("onboarding tour", () => {
     // ensure localStorage is fresh per test
     await page.addInitScript(() => {
       try {
-        window.localStorage.removeItem("reviewly_tour_completed");
+        window.localStorage.removeItem("basira_tour_completed");
       } catch {}
     });
   });
@@ -43,7 +43,7 @@ test.describe("onboarding tour", () => {
 
     // localStorage should mark the tour done
     const flag = await page.evaluate(() =>
-      window.localStorage.getItem("reviewly_tour_completed"),
+      window.localStorage.getItem("basira_tour_completed"),
     );
     expect(flag).toBe("1");
 
@@ -57,7 +57,7 @@ test.describe("onboarding tour", () => {
   }) => {
     await page.addInitScript(() => {
       try {
-        window.localStorage.setItem("reviewly_tour_completed", "1");
+        window.localStorage.setItem("basira_tour_completed", "1");
       } catch {}
     });
     await page.goto("/");

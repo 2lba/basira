@@ -128,7 +128,7 @@ async def test_should_post_review_with_inline_when_no_prior(db):
     assert posted["event"] == "COMMENT"
     assert len(posted["comments"]) == 2
     assert posted["comments"][0]["path"] == "src/a.py"
-    assert "reviewly review" in posted["body"].lower()
+    assert "basira review" in posted["body"].lower()
     assert out["inline_count"] == 2
     assert review.status == "posted"
 
@@ -152,7 +152,7 @@ async def test_should_update_summary_when_existing_and_no_inline(db):
     await db.commit()
 
     fake = FakeClient(
-        existing_reviews=[{"id": 9001, "state": "COMMENTED", "body": "**reviewly review**\nfoo"}]
+        existing_reviews=[{"id": 9001, "state": "COMMENTED", "body": "**basira review**\nfoo"}]
     )
     await post_review_to_github(db, review, client_override=fake)
 
@@ -166,7 +166,7 @@ async def test_should_post_new_when_existing_but_has_inline(db):
     await db.commit()
 
     fake = FakeClient(
-        existing_reviews=[{"id": 9001, "state": "COMMENTED", "body": "**reviewly review**\nold"}]
+        existing_reviews=[{"id": 9001, "state": "COMMENTED", "body": "**basira review**\nold"}]
     )
     await post_review_to_github(db, review, client_override=fake)
 

@@ -46,7 +46,7 @@ export default function SharedScan() {
     <main className="min-h-full">
       <div className="max-w-content mx-auto px-8 py-10">
         <header className="border-b border-border-subtle pb-6 mb-6 flex items-center justify-between">
-          <span className="text-fg font-semibold tracking-tight">reviewly</span>
+          <span className="text-fg font-semibold tracking-tight">basira</span>
           <span className="text-fg-muted text-xs">shared scan report</span>
         </header>
 

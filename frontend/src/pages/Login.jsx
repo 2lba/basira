@@ -7,7 +7,7 @@ export default function Login() {
       <div className="card max-w-md w-full">
         <h1 className="text-2xl font-semibold tracking-tight">sign in</h1>
         <p className="mt-2 text-fg-secondary text-sm">
-          Connect your GitHub account to install reviewly on a repo.
+          Connect your GitHub account to install basira on a repo.
         </p>
         <a
           href={githubLoginUrl()}

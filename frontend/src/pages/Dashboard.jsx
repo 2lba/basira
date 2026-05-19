@@ -34,7 +34,7 @@ export default function Dashboard({ user, onLogout }) {
       <header className="border-b border-border-subtle">
         <div className="max-w-content mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-fg font-semibold tracking-tight">reviewly</span>
+            <span className="text-fg font-semibold tracking-tight">basira</span>
             <span className="text-fg-muted text-xs">v0.1.0</span>
           </div>
           <div className="flex items-center gap-4">

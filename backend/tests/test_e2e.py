@@ -200,4 +200,4 @@ async def test_e2e_webhook_to_posted_review(client, db, monkeypatch):
     assert posted["name"] == "web"
     assert posted["number"] == 11
     assert len(posted["comments"]) == 1
-    assert "reviewly review" in posted["body"].lower()
+    assert "basira review" in posted["body"].lower()

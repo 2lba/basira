@@ -41,7 +41,7 @@ ps: ## list services
 
 .PHONY: db-shell
 db-shell: ## psql into postgres
-	$(COMPOSE) exec postgres psql -U $${POSTGRES_USER:-reviewly} -d $${POSTGRES_DB:-reviewly}
+	$(COMPOSE) exec postgres psql -U $${POSTGRES_USER:-basira} -d $${POSTGRES_DB:-basira}
 
 .PHONY: backend-shell
 backend-shell: ## shell into backend container

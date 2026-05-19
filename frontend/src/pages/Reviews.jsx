@@ -39,7 +39,7 @@ export default function Reviews() {
         testId="reviews-empty"
         icon={<GitPullRequest size={22} />}
         title="no reviews yet"
-        body="Open a pull request on a connected repo and reviewly will post AI feedback as comments."
+        body="Open a pull request on a connected repo and basira will post AI feedback as comments."
       />
     );
   }
