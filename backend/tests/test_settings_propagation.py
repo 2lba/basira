@@ -7,16 +7,16 @@ from app.services.review_engine import run_review
 
 
 async def _seed(db, **repo_overrides):
-    defaults = dict(
-        github_repo_id=300,
-        owner="acme",
-        name="cfg",
-        full_name="acme/cfg",
-        default_branch="main",
-        private=False,
-        review_enabled=True,
-        severity_threshold="minor",
-    )
+    defaults = {
+        "github_repo_id": 300,
+        "owner": "acme",
+        "name": "cfg",
+        "full_name": "acme/cfg",
+        "default_branch": "main",
+        "private": False,
+        "review_enabled": True,
+        "severity_threshold": "minor",
+    }
     defaults.update(repo_overrides)
     repo = Repository(**defaults)
     db.add(repo)
@@ -83,9 +83,7 @@ async def test_should_skip_files_matching_repo_ignored_paths(db, monkeypatch):
             stop_reason="end_turn",
         )
 
-    monkeypatch.setattr(
-        "app.integrations.github_api.InstallationClient.list_pr_files", fake_list
-    )
+    monkeypatch.setattr("app.integrations.github_api.InstallationClient.list_pr_files", fake_list)
     monkeypatch.setattr("app.services.review_engine.call_claude", fake_call)
 
     outcome = await run_review(db, pr)
@@ -112,9 +110,7 @@ async def test_should_include_custom_rules_in_prompt(db, monkeypatch):
             stop_reason="end_turn",
         )
 
-    monkeypatch.setattr(
-        "app.integrations.github_api.InstallationClient.list_pr_files", fake_list
-    )
+    monkeypatch.setattr("app.integrations.github_api.InstallationClient.list_pr_files", fake_list)
     monkeypatch.setattr("app.services.review_engine.call_claude", fake_call)
 
     await run_review(db, pr)
@@ -139,9 +135,7 @@ async def test_should_pass_model_override_to_claude(db, monkeypatch):
             stop_reason="end_turn",
         )
 
-    monkeypatch.setattr(
-        "app.integrations.github_api.InstallationClient.list_pr_files", fake_list
-    )
+    monkeypatch.setattr("app.integrations.github_api.InstallationClient.list_pr_files", fake_list)
     monkeypatch.setattr("app.services.review_engine.call_claude", fake_call)
 
     await run_review(db, pr)
@@ -187,9 +181,7 @@ async def test_should_filter_by_repo_severity_threshold(db, monkeypatch):
             stop_reason="end_turn",
         )
 
-    monkeypatch.setattr(
-        "app.integrations.github_api.InstallationClient.list_pr_files", fake_list
-    )
+    monkeypatch.setattr("app.integrations.github_api.InstallationClient.list_pr_files", fake_list)
     monkeypatch.setattr("app.services.review_engine.call_claude", fake_call)
 
     outcome = await run_review(db, pr)
