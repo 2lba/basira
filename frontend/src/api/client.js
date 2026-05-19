@@ -69,3 +69,12 @@ export const updateSlack = (body) =>
 export const getDiscord = () => api(`/api/me/discord`);
 export const updateDiscord = (body) =>
   api(`/api/me/discord`, { method: "PATCH", body: JSON.stringify(body) });
+
+export const resolveFinding = (id) =>
+  api(`/api/findings/${id}/resolve`, { method: "POST" });
+export const unresolveFinding = (id) =>
+  api(`/api/findings/${id}/unresolve`, { method: "POST" });
+export const markFalsePositive = (id) =>
+  api(`/api/findings/${id}/false-positive`, { method: "POST" });
+export const ignoreFindingRule = (id) =>
+  api(`/api/findings/${id}/ignore-rule`, { method: "POST" });

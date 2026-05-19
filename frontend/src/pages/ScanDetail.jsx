@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -7,12 +7,18 @@ import {
   RefreshCw,
   Share2,
   X,
+  CheckCircle2,
+  Slash,
+  EyeOff,
 } from "lucide-react";
 import {
   getScan,
   startScan,
   createShare,
   revokeShare,
+  resolveFinding,
+  markFalsePositive,
+  ignoreFindingRule,
 } from "../api/client.js";
 import { ScoreCircle, SeverityBadge } from "../components/features/ScanCard.jsx";
 import { downloadMarkdown } from "../lib/scanMarkdown.js";
@@ -53,14 +59,37 @@ export default function ScanDetail() {
     };
   }, [id]);
 
+  const [hiddenIds, setHiddenIds] = useState(() => new Set());
+  const [hiddenCategories, setHiddenCategories] = useState(() => new Set());
+
   if (err) return <p className="text-danger">{err}</p>;
   if (!scan) return <p className="text-fg-muted">loading...</p>;
 
   const isActive = ACTIVE.has(scan.status);
-  const groups = groupBySeverity(scan.findings || []);
+  const visibleFindings = (scan.findings || []).filter((f) => {
+    if (hiddenIds.has(f.id)) return false;
+    if (hiddenCategories.has(f.category)) return false;
+    return true;
+  });
+  const groups = groupBySeverity(visibleFindings);
   const ghBase = scan.repo_full_name
     ? `https://github.com/${scan.repo_full_name}`
     : null;
+
+  function hideFinding(id) {
+    setHiddenIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }
+  function hideCategory(category) {
+    setHiddenCategories((prev) => {
+      const next = new Set(prev);
+      next.add(category);
+      return next;
+    });
+  }
 
   async function onRescan() {
     setRescanning(true);
@@ -165,7 +194,14 @@ export default function ScanDetail() {
       {isActive ? (
         <ProgressPanel scan={scan} />
       ) : (
-        <ReportPanel scan={scan} groups={groups} ghBase={ghBase} />
+        <ReportPanel
+          scan={scan}
+          groups={groups}
+          visibleCount={visibleFindings.length}
+          ghBase={ghBase}
+          onHide={hideFinding}
+          onHideCategory={hideCategory}
+        />
       )}
     </section>
   );
@@ -194,7 +230,7 @@ function ProgressPanel({ scan }) {
   );
 }
 
-function ReportPanel({ scan, groups, ghBase }) {
+function ReportPanel({ scan, groups, visibleCount, ghBase, onHide, onHideCategory }) {
   if (scan.status === "failed") {
     return (
       <div className="mt-6 card border-danger/40">
@@ -229,11 +265,35 @@ function ReportPanel({ scan, groups, ghBase }) {
 
       <SeverityChips counts={scan.counts} />
 
+      <FindingsList
+        scan={scan}
+        groups={groups}
+        visibleCount={visibleCount}
+        ghBase={ghBase}
+        onHide={onHide}
+        onHideCategory={onHideCategory}
+      />
+    </>
+  );
+}
+
+function FindingsList({ scan, groups, visibleCount, ghBase, onHide, onHideCategory }) {
+  const total = (scan.findings || []).length;
+  const hidden = total - visibleCount;
+  return (
+    <>
       <h2 className="mt-8 text-sm uppercase tracking-wider text-fg-muted">
-        findings ({(scan.findings || []).length})
+        findings ({visibleCount})
+        {hidden > 0 && (
+          <span className="ml-2 text-fg-muted normal-case" data-testid="hidden-count">
+            ({hidden} hidden)
+          </span>
+        )}
       </h2>
-      {(scan.findings || []).length === 0 ? (
-        <p className="mt-4 text-fg-secondary">No issues found.</p>
+      {visibleCount === 0 ? (
+        <p className="mt-4 text-fg-secondary">
+          {total === 0 ? "No issues found." : "All findings filtered out."}
+        </p>
       ) : (
         <div className="mt-4 space-y-6">
           {["critical", "major", "minor", "nit"].map((sev) =>
@@ -244,6 +304,8 @@ function ReportPanel({ scan, groups, ghBase }) {
                 items={groups[sev]}
                 ghBase={ghBase}
                 headSha={scan.head_sha}
+                onHide={onHide}
+                onHideCategory={onHideCategory}
               />
             ) : null,
           )}
@@ -253,7 +315,7 @@ function ReportPanel({ scan, groups, ghBase }) {
   );
 }
 
-function SeverityGroup({ severity, items, ghBase, headSha }) {
+function SeverityGroup({ severity, items, ghBase, headSha, onHide, onHideCategory }) {
   return (
     <div data-testid={`severity-group-${severity}`}>
       <h3 className="text-xs uppercase tracking-wider text-fg-muted mb-2">
@@ -261,16 +323,43 @@ function SeverityGroup({ severity, items, ghBase, headSha }) {
       </h3>
       <ul className="space-y-3">
         {items.map((f) => (
-          <FindingItem key={f.id} finding={f} ghBase={ghBase} headSha={headSha} />
+          <FindingItem
+            key={f.id}
+            finding={f}
+            ghBase={ghBase}
+            headSha={headSha}
+            onHide={onHide}
+            onHideCategory={onHideCategory}
+          />
         ))}
       </ul>
     </div>
   );
 }
 
-function FindingItem({ finding, ghBase, headSha }) {
+function FindingItem({ finding, ghBase, headSha, onHide, onHideCategory }) {
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(null);
+  const [err, setErr] = useState(null);
   const ghUrl = buildGithubUrl(ghBase, headSha, finding.path, finding.line);
+
+  async function act(kind, fn) {
+    setBusy(kind);
+    setErr(null);
+    try {
+      await fn(finding.id);
+      if (kind === "ignore-rule") {
+        onHideCategory(finding.category);
+      } else {
+        onHide(finding.id);
+      }
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <li className="card" data-testid="finding-item">
       <button
@@ -315,9 +404,48 @@ function FindingItem({ finding, ghBase, headSha }) {
               view on github
             </a>
           )}
+          <div className="flex gap-2 flex-wrap pt-2 border-t border-border-subtle" data-testid="finding-actions">
+            <ActionBtn
+              testId="action-resolve"
+              icon={<CheckCircle2 size={12} />}
+              label="mark resolved"
+              busy={busy === "resolve"}
+              onClick={() => act("resolve", resolveFinding)}
+            />
+            <ActionBtn
+              testId="action-false-positive"
+              icon={<Slash size={12} />}
+              label="false positive"
+              busy={busy === "false-positive"}
+              onClick={() => act("false-positive", markFalsePositive)}
+            />
+            <ActionBtn
+              testId="action-ignore-rule"
+              icon={<EyeOff size={12} />}
+              label={`ignore "${finding.category}"`}
+              busy={busy === "ignore-rule"}
+              onClick={() => act("ignore-rule", ignoreFindingRule)}
+            />
+          </div>
+          {err && <p className="text-danger text-xs" data-testid="action-error">{err}</p>}
         </div>
       )}
     </li>
+  );
+}
+
+function ActionBtn({ testId, icon, label, busy, onClick }) {
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      disabled={busy}
+      onClick={onClick}
+      className="inline-flex items-center gap-1 text-xs text-fg-secondary hover:text-fg border border-border-subtle hover:border-border rounded px-2 py-1 disabled:opacity-50 transition-colors"
+    >
+      {icon}
+      <span>{busy ? "..." : label}</span>
+    </button>
   );
 }
 
