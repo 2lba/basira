@@ -20,10 +20,34 @@ async def ping(ctx) -> str:
 
 
 async def review_pr(ctx, pull_request_id: str, extra: dict[str, Any] | None = None) -> dict:
-    """Placeholder for the actual review pipeline (phases 4-6).
-    Logs the dispatch and returns a stub so the queue plumbing is end-to-end."""
-    log.info("worker.review_pr.received", pr_id=pull_request_id, extra=extra or {})
-    return {"pr_id": pull_request_id, "status": "queued_placeholder"}
+    import uuid
+
+    from app.db.session import AsyncSessionLocal
+    from app.models.pull_request import PullRequest
+    from app.services.review_engine import run_review
+
+    log.info("worker.review_pr.start", pr_id=pull_request_id, extra=extra or {})
+    pr_uuid = uuid.UUID(pull_request_id)
+
+    async with AsyncSessionLocal() as db:
+        pr = await db.get(PullRequest, pr_uuid)
+        if pr is None:
+            log.warning("worker.review_pr.missing", pr_id=pull_request_id)
+            return {"pr_id": pull_request_id, "status": "missing"}
+
+        try:
+            outcome = await run_review(db, pr)
+        except Exception as e:
+            log.exception("worker.review_pr.failed", pr_id=pull_request_id)
+            return {"pr_id": pull_request_id, "status": "failed", "err": str(e)[:200]}
+
+    return {
+        "pr_id": pull_request_id,
+        "status": outcome.review.status,
+        "review_id": str(outcome.review.id),
+        "comments": outcome.comments_created,
+        "cached": outcome.skipped_existing,
+    }
 
 
 async def on_startup(ctx) -> None:
