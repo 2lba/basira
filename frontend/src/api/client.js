@@ -27,3 +27,14 @@ export const logout = () => api("/auth/logout", { method: "POST" });
 export const refreshSession = () => api("/auth/refresh", { method: "POST" });
 
 export const githubLoginUrl = () => `${BASE}/auth/github/login`;
+
+export const listRepos = () => api("/api/repos");
+export const getRepo = (id) => api(`/api/repos/${id}`);
+export const updateRepo = (id, body) =>
+  api(`/api/repos/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+
+export const listReviews = (params = {}) => {
+  const q = new URLSearchParams(params).toString();
+  return api(`/api/reviews${q ? `?${q}` : ""}`);
+};
+export const getReview = (id) => api(`/api/reviews/${id}`);
