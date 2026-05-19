@@ -2,7 +2,13 @@ services:
   backend:
     environment:
       E2E_TEST_MODE: "true"
+      # Override the prod-ish ngrok URLs so share/share-link tests resolve
+      # to the same origin the Playwright runner uses.
+      FRONTEND_BASE_URL: "http://localhost:5173"
+      APP_BASE_URL: "http://localhost:8000"
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:3000"
 
   worker:
     environment:
       E2E_TEST_MODE: "true"
+      FRONTEND_BASE_URL: "http://localhost:5173"
