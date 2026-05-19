@@ -1,22 +1,35 @@
+import { showToast } from "../components/Toasts.jsx";
+
 const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 export async function api(path, options = {}) {
-  const res = await fetch(`${BASE}${path}`, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    const err = new Error(body?.error?.message || `HTTP ${res.status}`);
-    err.status = res.status;
-    err.code = body?.error?.code;
+  const { silent, ...rest } = options;
+  const doCall = () =>
+    fetch(`${BASE}${path}`, {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(rest.headers || {}),
+      },
+      ...rest,
+    });
+
+  try {
+    const res = await doCall();
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      const err = new Error(body?.error?.message || `HTTP ${res.status}`);
+      err.status = res.status;
+      err.code = body?.error?.code;
+      throw err;
+    }
+    return res.status === 204 ? null : res.json();
+  } catch (err) {
+    if (!silent && err.status !== 401) {
+      showToast({ message: err.message, retry: () => api(path, options) });
+    }
     throw err;
   }
-  return res.json();
 }
 
 export const health = () => api("/healthz");

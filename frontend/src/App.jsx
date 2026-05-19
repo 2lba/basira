@@ -12,10 +12,12 @@ import Scans from "./pages/Scans.jsx";
 import SharedScan from "./pages/SharedScan.jsx";
 import Account from "./pages/Account.jsx";
 import About from "./pages/About.jsx";
+import Toasts from "./components/Toasts.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
+      <Toasts />
       <Routes>
         <Route path="/shared/:token" element={<SharedScan />} />
         <Route path="/*" element={<AppShell />} />
