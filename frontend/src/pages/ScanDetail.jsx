@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Slash,
   EyeOff,
+  Search,
 } from "lucide-react";
 import {
   getScan,
@@ -61,14 +62,20 @@ export default function ScanDetail() {
 
   const [hiddenIds, setHiddenIds] = useState(() => new Set());
   const [hiddenCategories, setHiddenCategories] = useState(() => new Set());
+  const [search, setSearch] = useState("");
 
   if (err) return <p className="text-danger">{err}</p>;
   if (!scan) return <p className="text-fg-muted">loading...</p>;
 
   const isActive = ACTIVE.has(scan.status);
+  const q = search.trim().toLowerCase();
   const visibleFindings = (scan.findings || []).filter((f) => {
     if (hiddenIds.has(f.id)) return false;
     if (hiddenCategories.has(f.category)) return false;
+    if (q) {
+      const hay = `${f.path} ${f.message} ${f.category} ${f.severity}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
     return true;
   });
   const groups = groupBySeverity(visibleFindings);
@@ -201,6 +208,8 @@ export default function ScanDetail() {
           ghBase={ghBase}
           onHide={hideFinding}
           onHideCategory={hideCategory}
+          search={search}
+          onSearch={setSearch}
         />
       )}
     </section>
@@ -230,7 +239,16 @@ function ProgressPanel({ scan }) {
   );
 }
 
-function ReportPanel({ scan, groups, visibleCount, ghBase, onHide, onHideCategory }) {
+function ReportPanel({
+  scan,
+  groups,
+  visibleCount,
+  ghBase,
+  onHide,
+  onHideCategory,
+  search,
+  onSearch,
+}) {
   if (scan.status === "failed") {
     return (
       <div className="mt-6 card border-danger/40">
@@ -264,6 +282,23 @@ function ReportPanel({ scan, groups, visibleCount, ghBase, onHide, onHideCategor
       </div>
 
       <SeverityChips counts={scan.counts} />
+
+      {(scan.findings || []).length > 0 && (
+        <div className="mt-6 relative" data-testid="findings-search-wrap">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none"
+          />
+          <input
+            data-testid="findings-search"
+            type="search"
+            placeholder="filter by file, category, message…"
+            value={search}
+            onChange={(e) => onSearch(e.target.value)}
+            className="input pl-9"
+          />
+        </div>
+      )}
 
       <FindingsList
         scan={scan}
