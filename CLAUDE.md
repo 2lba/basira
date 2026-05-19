@@ -1,8 +1,12 @@
-# Basira - AI Code Reviewer
+# Basira — AI Code Reviewer
 
 ## Project Overview
 Open source AI-powered code reviewer for GitHub Pull Requests.
 Free alternative to CodeRabbit, fully self-hostable.
+
+Name: Basira (Arabic: بصيرة) — insight, foresight.
+Tagline: "We see what you don't."
+Previous working name: Reviewly (renamed during wave 4.5).
 
 ## Owner
 Abdulaziz AlQahtani (@2lba)
@@ -78,6 +82,14 @@ Work on items in order. Don't skip ahead. Complete each before next.
 - Always pin go.mod to minimum supported version, not local version
 - Never use special chars (@, !, /) in dev passwords (shell parsing breaks)
 - datetime.now(timezone.utc) - never datetime.utcnow (deprecated)
+- Renaming the project (Reviewly → Basira) required: full sed pass, recreating
+  the Postgres volume because the DB name changed, re-installing the frontend
+  container's anonymous node_modules volume because `docker compose down -v`
+  blows it away, and a localStorage migration for the onboarding flag so
+  existing users don't see the tour twice.
+- The "Install on GitHub" URL has to be built from `GITHUB_APP_NAME` (env)
+  rather than hardcoded; otherwise users land on a stranger's app on the
+  GitHub Marketplace.
 
 ## Working Style
 - Long autonomous sessions are fine
@@ -164,18 +176,24 @@ it theoretically impossible.
 - NOT inspired by: generic Bootstrap admin templates, Material Design boilerplate
 
 ### Color Palette
-- Primary background: #0a0a0a (near black)
-- Surface: #141414
-- Border subtle: #1f1f1f
-- Border emphasis: #2a2a2a
-- Text primary: #f5f5f5
+Dark-mode native. No light theme is shipped or planned.
+
+- Page background: #0a0a0a
+- Surface / card: #141414
+- Border subtle: #262626
+- Border emphasis: #3f3f3f
+- Text primary: #fafafa
 - Text secondary: #a3a3a3
-- Text muted: #525252
-- Accent: #6366f1 (indigo) for primary actions
+- Text tertiary / muted: #525252
+- Accent (interactive): #06b6d4 (cyan-500) — matches the Basira logo dot
+- Accent hover: #22d3ee (cyan-400)
 - Success: #10b981
 - Warning: #f59e0b
-- Error: #ef4444
-- AI insight highlight: #8b5cf6 (violet)
+- Danger: #ef4444
+
+Wordmark color uses a CSS variable (`--basira-wordmark`, default `#fafafa`)
+so the logo can invert if it ever lands on a light surface — but the app
+itself does not ship a light theme.
 
 ### Typography
 - Display/Headings: Inter (weight 600-700)
@@ -207,10 +225,11 @@ it theoretically impossible.
 - Reduce motion: respect prefers-reduced-motion
 - No bouncy/playful animations (this is a dev tool)
 
-### Dark Mode First
-- Design dark first, light mode as adaptation
-- Most developers prefer dark
-- Use CSS variables for theme switching
+### Dark Mode Only
+- The app is dark-mode native. No light theme.
+- No theme toggle. `<html class="dark">` is fixed.
+- Use CSS variables only for things that genuinely vary (e.g. the logo
+  wordmark color), not for theme switching.
 
 ### Landing Page
 - Hero: short tagline + subtitle + 2 CTAs (GitHub stars + Get Started)
