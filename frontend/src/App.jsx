@@ -11,6 +11,7 @@ import ScanCompare from "./pages/ScanCompare.jsx";
 import Scans from "./pages/Scans.jsx";
 import SharedScan from "./pages/SharedScan.jsx";
 import Account from "./pages/Account.jsx";
+import About from "./pages/About.jsx";
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ function AppShell() {
         <Route path="scans/compare" element={<ScanCompare />} />
         <Route path="scans/:id" element={<ScanDetail />} />
         <Route path="settings" element={<Account user={user} />} />
+        <Route path="about" element={<About />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
