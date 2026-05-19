@@ -4,6 +4,7 @@ import { LogOut, GitPullRequest, GitBranch, Settings, Search, Info, Command } fr
 import { logout } from "../api/client.js";
 import ShortcutsModal from "./ShortcutsModal.jsx";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts.js";
+import Logo from "./Logo.jsx";
 
 export default function Layout({ user, onLogout }) {
   const [help, setHelp] = useState(false);
@@ -27,9 +28,9 @@ export default function Layout({ user, onLogout }) {
     <div className="min-h-full flex">
       <ShortcutsModal open={help} onClose={() => setHelp(false)} />
       <aside className="w-60 border-r border-border-subtle flex flex-col">
-        <div className="px-6 py-5 border-b border-border-subtle">
-          <span className="text-fg font-semibold tracking-tight">basira</span>
-          <span className="ml-2 text-fg-muted text-xs">v0.1.0</span>
+        <div className="px-6 py-5 border-b border-border-subtle flex items-baseline gap-3">
+          <Logo size="sm" withAccent={false} />
+          <span className="text-fg-muted text-xs">v0.1.0</span>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           <NavItem to="/" icon={<GitBranch size={16} />} label="repositories" end />

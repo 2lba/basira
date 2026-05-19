@@ -1,11 +1,16 @@
 import { Github } from "lucide-react";
 import { githubLoginUrl } from "../api/client.js";
+import Logo from "../components/Logo.jsx";
 
 export default function Login() {
   return (
     <div className="min-h-full flex items-center justify-center px-6">
       <div className="card max-w-md w-full">
-        <h1 className="text-2xl font-semibold tracking-tight">sign in</h1>
+        <div className="mb-6">
+          <Logo size="md" />
+        </div>
+        <p className="text-fg-secondary text-sm">We see what you don't.</p>
+        <h1 className="mt-6 text-2xl font-semibold tracking-tight">sign in</h1>
         <p className="mt-2 text-fg-secondary text-sm">
           Connect your GitHub account to install basira on a repo.
         </p>
@@ -17,8 +22,8 @@ export default function Login() {
           <span>continue with github</span>
         </a>
         <p className="mt-4 text-fg-muted text-xs">
-          We only read your profile and email. You can revoke access anytime in
-          GitHub settings.
+          We read your profile, email, and the list of repos you can access.
+          You can revoke access anytime in GitHub settings.
         </p>
       </div>
     </div>
