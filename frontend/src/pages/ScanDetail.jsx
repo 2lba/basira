@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink } from "lucide-react";
-import { getScan } from "../api/client.js";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { ArrowLeft, ExternalLink, Download, RefreshCw } from "lucide-react";
+import { getScan, startScan } from "../api/client.js";
 import { ScoreCircle, SeverityBadge } from "../components/features/ScanCard.jsx";
+import { downloadMarkdown } from "../lib/scanMarkdown.js";
 
 const ACTIVE = new Set(["pending", "running"]);
 
 export default function ScanDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [scan, setScan] = useState(null);
   const [err, setErr] = useState(null);
+  const [rescanning, setRescanning] = useState(false);
   const tick = useRef(0);
 
   useEffect(() => {
@@ -44,6 +47,22 @@ export default function ScanDetail() {
     ? `https://github.com/${scan.repo_full_name}`
     : null;
 
+  async function onRescan() {
+    setRescanning(true);
+    try {
+      const s = await startScan(scan.repository_id);
+      navigate(`/scans/${s.id}`);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setRescanning(false);
+    }
+  }
+
+  function onExport() {
+    downloadMarkdown(scan);
+  }
+
   return (
     <section data-testid="scan-detail">
       <Link to={`/repos/${scan.repository_id}`} className="btn btn-ghost mb-4">
@@ -51,14 +70,36 @@ export default function ScanDetail() {
         <span>back to repository</span>
       </Link>
 
-      <h1 className="text-2xl font-semibold tracking-tight">
-        scan report
-      </h1>
-      <p className="mt-1 text-fg-secondary text-sm font-mono">
-        {scan.repo_full_name}
-        {scan.head_sha ? ` · ${scan.head_sha.slice(0, 7)}` : ""}
-        {scan.ref ? ` · ${scan.ref}` : ""}
-      </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">scan report</h1>
+          <p className="mt-1 text-fg-secondary text-sm font-mono">
+            {scan.repo_full_name}
+            {scan.head_sha ? ` · ${scan.head_sha.slice(0, 7)}` : ""}
+            {scan.ref ? ` · ${scan.ref}` : ""}
+          </p>
+        </div>
+        <div className="flex gap-2 flex-wrap" data-testid="scan-actions">
+          <button
+            data-testid="rescan-button"
+            disabled={rescanning || isActive}
+            onClick={onRescan}
+            className="btn btn-ghost disabled:opacity-50"
+          >
+            <RefreshCw size={14} />
+            <span>{rescanning ? "starting..." : "rescan now"}</span>
+          </button>
+          <button
+            data-testid="export-md-button"
+            disabled={isActive}
+            onClick={onExport}
+            className="btn btn-ghost disabled:opacity-50"
+          >
+            <Download size={14} />
+            <span>export .md</span>
+          </button>
+        </div>
+      </div>
 
       {isActive ? (
         <ProgressPanel scan={scan} />
