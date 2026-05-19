@@ -15,7 +15,9 @@ from app.services.visibility import user_can_access_repo
 router = APIRouter(prefix="/api/findings", tags=["findings"])
 
 
-async def _load(db: AsyncSession, finding_id: str, user: User) -> tuple[ScanFinding, Scan, Repository]:
+async def _load(
+    db: AsyncSession, finding_id: str, user: User
+) -> tuple[ScanFinding, Scan, Repository]:
     try:
         fid = uuid.UUID(finding_id)
     except ValueError as e:
