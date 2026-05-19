@@ -12,7 +12,7 @@ test.describe("slack webhook", () => {
   }) => {
     await request.post(`${API_BASE}/test/webhook-sink/slack/clear`);
 
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     const card = page.getByTestId("slack-card");
     await expect(card).toBeVisible();
 
@@ -61,7 +61,7 @@ test.describe("slack webhook", () => {
     seeded: _seeded,
   }) => {
     const sinkUrl = `${BACKEND_INTERNAL}/test/webhook-sink/slack`;
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     const card = page.getByTestId("slack-card");
     await card.getByTestId("slack-card-url").fill(sinkUrl);
     await card.getByTestId("slack-card-enabled").check();

@@ -33,7 +33,7 @@ test.describe("email notification on scan finish", () => {
   }) => {
     await request.post(`${API_BASE}/test/last-email/clear`);
 
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     const card = page.getByTestId("smtp-card");
     await expect(card).toBeVisible();
 
@@ -83,7 +83,7 @@ test.describe("email notification on scan finish", () => {
     page,
     seeded: _seeded,
   }) => {
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     const toggle = page.getByTestId("notify-enabled");
     await expect(toggle).toBeDisabled();
     // filling only host still keeps it disabled

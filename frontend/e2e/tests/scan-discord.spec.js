@@ -12,7 +12,7 @@ test.describe("discord webhook", () => {
   }) => {
     await request.post(`${API_BASE}/test/webhook-sink/discord/clear`);
 
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     const card = page.getByTestId("discord-card");
     await expect(card).toBeVisible();
     await expect(card.getByTestId("discord-card-enabled")).toBeDisabled();
@@ -61,7 +61,7 @@ test.describe("discord webhook", () => {
     page,
     seeded: _seeded,
   }) => {
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     const card = page.getByTestId("discord-card");
     const toggle = card.getByTestId("discord-card-enabled");
     await expect(toggle).toBeDisabled();

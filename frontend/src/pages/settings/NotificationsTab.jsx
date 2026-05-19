@@ -6,25 +6,13 @@ import {
   updateSlack,
   getDiscord,
   updateDiscord,
-} from "../api/client.js";
-import ChatWebhookCard from "../components/features/ChatWebhookCard.jsx";
+} from "../../api/client.js";
+import ChatWebhookCard from "../../components/features/ChatWebhookCard.jsx";
 
-export default function Account({ user }) {
+export default function NotificationsTab() {
   return (
-    <section className="max-w-2xl">
-      <h1 className="text-2xl font-semibold tracking-tight">account</h1>
-
-      <div className="mt-6 card">
-        <h2 className="text-sm uppercase tracking-wider text-fg-muted">profile</h2>
-        <dl className="mt-3 space-y-3 text-sm">
-          <Row label="github user">{user.github_login}</Row>
-          <Row label="email">{user.email || "—"}</Row>
-          <Row label="reviewly id" mono>{user.id}</Row>
-        </dl>
-      </div>
-
-      <NotificationsCard />
-
+    <div className="max-w-2xl" data-testid="notifications-tab">
+      <SmtpCard />
       <ChatWebhookCard
         testId="slack-card"
         title="slack"
@@ -32,7 +20,6 @@ export default function Account({ user }) {
         load={getSlack}
         save={updateSlack}
       />
-
       <ChatWebhookCard
         testId="discord-card"
         title="discord"
@@ -40,20 +27,11 @@ export default function Account({ user }) {
         load={getDiscord}
         save={updateDiscord}
       />
-
-      <div className="mt-6 card">
-        <h2 className="text-sm uppercase tracking-wider text-fg-muted">
-          install on more repos
-        </h2>
-        <p className="mt-2 text-fg-secondary text-sm">
-          Use the GitHub App page to grant access to more repositories.
-        </p>
-      </div>
-    </section>
+    </div>
   );
 }
 
-function NotificationsCard() {
+function SmtpCard() {
   const [state, setState] = useState(null);
   const [draft, setDraft] = useState(null);
   const [error, setError] = useState(null);
@@ -66,16 +44,7 @@ function NotificationsCard() {
       .then((s) => {
         if (cancelled) return;
         setState(s);
-        setDraft({
-          smtp_host: s.smtp_host || "",
-          smtp_port: s.smtp_port ?? "",
-          smtp_username: s.smtp_username || "",
-          smtp_from: s.smtp_from || "",
-          smtp_use_tls: s.smtp_use_tls,
-          notify_email_enabled: s.notify_email_enabled,
-          smtp_password: "",
-          clear_password: false,
-        });
+        setDraft(toDraft(s));
       })
       .catch((e) => !cancelled && setError(e.message));
     return () => {
@@ -83,9 +52,8 @@ function NotificationsCard() {
     };
   }, []);
 
-  if (error && !state) return <p className="mt-6 text-danger">{error}</p>;
-  if (!state || !draft)
-    return <div className="mt-6 card h-40 animate-pulse" />;
+  if (error && !state) return <p className="text-danger">{error}</p>;
+  if (!state || !draft) return <div className="card h-40 animate-pulse" />;
 
   async function save() {
     setSaving(true);
@@ -104,16 +72,7 @@ function NotificationsCard() {
       if (draft.smtp_password) body.smtp_password = draft.smtp_password;
       const updated = await updateSmtp(body);
       setState(updated);
-      setDraft({
-        smtp_host: updated.smtp_host || "",
-        smtp_port: updated.smtp_port ?? "",
-        smtp_username: updated.smtp_username || "",
-        smtp_from: updated.smtp_from || "",
-        smtp_use_tls: updated.smtp_use_tls,
-        notify_email_enabled: updated.notify_email_enabled,
-        smtp_password: "",
-        clear_password: false,
-      });
+      setDraft(toDraft(updated));
       setStatus("saved");
       setTimeout(() => setStatus(null), 1500);
     } catch (e) {
@@ -123,14 +82,10 @@ function NotificationsCard() {
     }
   }
 
-  const canEnable = !!(
-    draft.smtp_host &&
-    draft.smtp_port &&
-    draft.smtp_from
-  );
+  const canEnable = !!(draft.smtp_host && draft.smtp_port && draft.smtp_from);
 
   return (
-    <div className="mt-6 card space-y-4" data-testid="smtp-card">
+    <div className="card space-y-4" data-testid="smtp-card">
       <div>
         <h2 className="text-sm uppercase tracking-wider text-fg-muted">
           email notifications
@@ -236,7 +191,11 @@ function NotificationsCard() {
         </span>
       </label>
 
-      {error && <p className="text-danger text-sm" data-testid="smtp-error">{error}</p>}
+      {error && (
+        <p className="text-danger text-sm" data-testid="smtp-error">
+          {error}
+        </p>
+      )}
       {status && (
         <p className="text-success text-sm" data-testid="smtp-status">
           {status}
@@ -257,6 +216,19 @@ function NotificationsCard() {
   );
 }
 
+function toDraft(s) {
+  return {
+    smtp_host: s.smtp_host || "",
+    smtp_port: s.smtp_port ?? "",
+    smtp_username: s.smtp_username || "",
+    smtp_from: s.smtp_from || "",
+    smtp_use_tls: s.smtp_use_tls,
+    notify_email_enabled: s.notify_email_enabled,
+    smtp_password: "",
+    clear_password: false,
+  };
+}
+
 function Field({ label, children }) {
   return (
     <label className="block text-sm">
@@ -265,14 +237,5 @@ function Field({ label, children }) {
       </span>
       <div className="mt-1">{children}</div>
     </label>
-  );
-}
-
-function Row({ label, children, mono }) {
-  return (
-    <div className="flex justify-between gap-4">
-      <dt className="text-fg-muted">{label}</dt>
-      <dd className={mono ? "font-mono text-xs" : ""}>{children}</dd>
-    </div>
   );
 }

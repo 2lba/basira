@@ -10,8 +10,11 @@ import ScanDetail from "./pages/ScanDetail.jsx";
 import ScanCompare from "./pages/ScanCompare.jsx";
 import Scans from "./pages/Scans.jsx";
 import SharedScan from "./pages/SharedScan.jsx";
-import Account from "./pages/Account.jsx";
 import About from "./pages/About.jsx";
+import SettingsLayout from "./pages/settings/SettingsLayout.jsx";
+import AccountTab from "./pages/settings/AccountTab.jsx";
+import NotificationsTab from "./pages/settings/NotificationsTab.jsx";
+import ApiKeysTab from "./pages/settings/ApiKeysTab.jsx";
 import Toasts from "./components/Toasts.jsx";
 
 export default function App() {
@@ -51,7 +54,11 @@ function AppShell() {
         <Route path="scans" element={<Scans />} />
         <Route path="scans/compare" element={<ScanCompare />} />
         <Route path="scans/:id" element={<ScanDetail />} />
-        <Route path="settings" element={<Account user={user} />} />
+        <Route path="settings" element={<SettingsLayout />}>
+          <Route index element={<AccountTab />} />
+          <Route path="notifications" element={<NotificationsTab />} />
+          <Route path="api-keys" element={<ApiKeysTab />} />
+        </Route>
         <Route path="about" element={<About />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

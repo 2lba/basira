@@ -66,7 +66,7 @@ export default function Layout({ user, onLogout }) {
       </aside>
       <main className="flex-1 overflow-auto">
         <div className="max-w-content mx-auto px-8 py-8">
-          <Outlet />
+          <Outlet context={{ user }} />
         </div>
       </main>
     </div>
