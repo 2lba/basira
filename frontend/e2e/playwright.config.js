@@ -21,6 +21,9 @@ export default defineConfig({
       use: {
         browserName: "chromium",
         viewport: { width: 1280, height: 800 },
+        launchOptions: {
+          slowMo: Number(process.env.E2E_SLOWMO || 0),
+        },
       },
     },
   ],
