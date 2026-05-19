@@ -1,12 +1,24 @@
 import os
+import re
+
+# Force tests onto a dedicated database. Past pytest runs nuked real users
+# and scans because the autouse _clean_state fixture TRUNCATEs everything;
+# pinning the DB name avoids that whatever DATABASE_URL the environment
+# supplies. Set BASIRA_ALLOW_DB_WIPE=1 to opt back into the original URL
+# (used in CI where the runner already owns an isolated db).
+_default_db_url = "postgresql+asyncpg://basira:basira_dev_password@postgres:5432/basira"
+if os.environ.get("BASIRA_ALLOW_DB_WIPE") != "1":
+    src = os.environ.get("DATABASE_URL", _default_db_url)
+    # rewrite the database name to end with _test so we can never touch the
+    # real db by accident
+    rewritten = re.sub(r"/([^/?]+)(\?|$)", r"/\1_test\2", src, count=1)
+    if "_test" not in rewritten:
+        rewritten = src.rsplit("/", 1)[0] + "/basira_test"
+    os.environ["DATABASE_URL"] = rewritten
 
 os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("SECRET_KEY", "test-secret")
 os.environ.setdefault("TOKEN_ENCRYPTION_KEY", "dVBTW1fvoM_FcogEF4ThvfRKNU6QlWqQ-Gtykc8Qrok=")
-os.environ.setdefault(
-    "DATABASE_URL",
-    "postgresql+asyncpg://basira:basira_dev_password@postgres:5432/basira",
-)
 os.environ.setdefault("REDIS_URL", "redis://redis:6379/0")
 os.environ.setdefault("GITHUB_APP_WEBHOOK_SECRET", "test_webhook_secret")
 
