@@ -29,7 +29,6 @@ from app.integrations.github_oauth import (
     fetch_profile,
     list_user_repos,
 )
-from app.services.repo_sync import sync_user_repos
 from app.models.user import User
 from app.schemas.auth import LoginUrlResponse, MeResponse
 from app.services.auth_service import (
@@ -42,6 +41,7 @@ from app.services.auth_service import (
     rotate_refresh,
     upsert_user_from_github,
 )
+from app.services.repo_sync import sync_user_repos
 
 log = get_logger("basira.auth")
 router = APIRouter(prefix="/auth", tags=["auth"])
