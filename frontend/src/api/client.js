@@ -46,3 +46,14 @@ export const listAllScans = () => api(`/api/scans`);
 export const getScan = (id) => api(`/api/scans/${id}`);
 export const compareScans = (a, b) =>
   api(`/api/scans/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
+
+export const createShare = (id) =>
+  api(`/api/scans/${id}/share`, { method: "POST" });
+export const revokeShare = (id) =>
+  fetch(`${BASE}/api/scans/${id}/share`, {
+    method: "DELETE",
+    credentials: "include",
+  }).then((r) => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  });
+export const getPublicScan = (token) => api(`/share/${encodeURIComponent(token)}`);

@@ -127,3 +127,30 @@ class ScanCompareResult(BaseModel):
     resolved_findings: list[ScanCompareEntry]
     persisting_findings: list[ScanCompareEntry]
     counts_delta: dict[str, int]
+
+
+class ScanShareResponse(BaseModel):
+    token: str
+    url: str
+
+
+class PublicScanFinding(BaseModel):
+    path: str
+    line: int | None
+    severity: str
+    category: str
+    message: str
+    suggestion: str | None
+
+
+class PublicScan(BaseModel):
+    repo_full_name: str
+    head_sha: str | None
+    ref: str | None
+    score: int | None
+    summary: str | None
+    counts: dict[str, int] | None
+    files_scanned: int | None
+    model: str | None
+    finished_at: datetime | None
+    findings: list[PublicScanFinding]

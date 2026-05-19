@@ -1,7 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Download, RefreshCw } from "lucide-react";
-import { getScan, startScan } from "../api/client.js";
+import {
+  ArrowLeft,
+  ExternalLink,
+  Download,
+  RefreshCw,
+  Share2,
+  X,
+} from "lucide-react";
+import {
+  getScan,
+  startScan,
+  createShare,
+  revokeShare,
+} from "../api/client.js";
 import { ScoreCircle, SeverityBadge } from "../components/features/ScanCard.jsx";
 import { downloadMarkdown } from "../lib/scanMarkdown.js";
 
@@ -13,6 +25,9 @@ export default function ScanDetail() {
   const [scan, setScan] = useState(null);
   const [err, setErr] = useState(null);
   const [rescanning, setRescanning] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState(null);
+  const [shareBusy, setShareBusy] = useState(false);
   const tick = useRef(0);
 
   useEffect(() => {
@@ -63,6 +78,34 @@ export default function ScanDetail() {
     downloadMarkdown(scan);
   }
 
+  async function onShare() {
+    setShareOpen(true);
+    if (shareUrl) return;
+    setShareBusy(true);
+    try {
+      const res = await createShare(scan.id);
+      setShareUrl(res.url);
+    } catch (e) {
+      setErr(e.message);
+      setShareOpen(false);
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
+  async function onRevoke() {
+    setShareBusy(true);
+    try {
+      await revokeShare(scan.id);
+      setShareUrl(null);
+      setShareOpen(false);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
   return (
     <section data-testid="scan-detail">
       <Link to={`/repos/${scan.repository_id}`} className="btn btn-ghost mb-4">
@@ -98,8 +141,26 @@ export default function ScanDetail() {
             <Download size={14} />
             <span>export .md</span>
           </button>
+          <button
+            data-testid="share-button"
+            disabled={isActive}
+            onClick={onShare}
+            className="btn btn-ghost disabled:opacity-50"
+          >
+            <Share2 size={14} />
+            <span>share</span>
+          </button>
         </div>
       </div>
+
+      {shareOpen && (
+        <ShareModal
+          url={shareUrl}
+          busy={shareBusy}
+          onClose={() => setShareOpen(false)}
+          onRevoke={onRevoke}
+        />
+      )}
 
       {isActive ? (
         <ProgressPanel scan={scan} />
@@ -311,6 +372,83 @@ function Stat({ label, value }) {
     <div>
       <div className="text-fg-muted uppercase tracking-wider">{label}</div>
       <div className="text-fg text-sm font-mono mt-1">{value}</div>
+    </div>
+  );
+}
+
+function ShareModal({ url, busy, onClose, onRevoke }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // clipboard may be blocked; fall back silently
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      data-testid="share-modal"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="card max-w-lg w-full mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-lg font-medium">share this scan</h3>
+          <button
+            type="button"
+            aria-label="close"
+            onClick={onClose}
+            className="text-fg-muted hover:text-fg"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <p className="mt-2 text-fg-secondary text-sm">
+          Anyone with this link can view the report, even without an account.
+        </p>
+        <div className="mt-4">
+          {busy && !url ? (
+            <div className="card h-10 animate-pulse" />
+          ) : url ? (
+            <div className="flex gap-2">
+              <input
+                data-testid="share-url-input"
+                readOnly
+                value={url}
+                onFocus={(e) => e.target.select()}
+                className="input flex-1 font-mono text-xs"
+              />
+              <button
+                data-testid="share-copy-button"
+                onClick={copy}
+                className="btn btn-primary"
+              >
+                {copied ? "copied" : "copy"}
+              </button>
+            </div>
+          ) : null}
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button
+            data-testid="share-revoke-button"
+            disabled={busy || !url}
+            onClick={onRevoke}
+            className="btn btn-ghost text-danger disabled:opacity-40"
+          >
+            revoke link
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,12 @@
+import secrets
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.core.auth_deps import current_user
 from app.core.errors import AppError
 from app.db.session import get_db
@@ -11,16 +14,20 @@ from app.models.repository import Repository
 from app.models.scan import Scan, ScanFinding
 from app.models.user import User
 from app.schemas.dashboard import (
+    PublicScan,
+    PublicScanFinding,
     ScanCompareEntry,
     ScanCompareResult,
     ScanDetail,
     ScanFindingOut,
     ScanListItem,
+    ScanShareResponse,
 )
 from app.services.visibility import user_can_access_repo, user_repo_ids
 from app.workers.queue import enqueue_scan
 
 router = APIRouter(prefix="/api", tags=["scans"])
+public_router = APIRouter(prefix="/share", tags=["public"])
 
 
 def _item(scan: Scan, repo: Repository) -> ScanListItem:
@@ -282,4 +289,101 @@ async def get_scan(
         cost_usd=float(scan.cost_usd) if scan.cost_usd is not None else None,
         model=scan.model,
         error=scan.error,
+    )
+
+
+@router.post("/scans/{scan_id}/share", response_model=ScanShareResponse)
+async def create_share(
+    scan_id: str,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    sid = _parse_uuid(scan_id, "BAD_SCAN_ID")
+    scan = await db.get(Scan, sid)
+    if scan is None or scan.deleted_at is not None:
+        raise AppError("SCAN_NOT_FOUND", "scan not found", status.HTTP_404_NOT_FOUND)
+    if not await user_can_access_repo(db, user.id, scan.repository_id):
+        raise AppError("SCAN_NOT_FOUND", "scan not found", status.HTTP_404_NOT_FOUND)
+    if scan.status not in ("succeeded", "failed"):
+        raise AppError(
+            "SCAN_NOT_READY",
+            "scan must finish before it can be shared",
+            status.HTTP_409_CONFLICT,
+        )
+
+    if scan.share_token is None:
+        scan.share_token = secrets.token_urlsafe(24)
+        scan.share_created_at = datetime.now(UTC)
+        await db.commit()
+        await db.refresh(scan)
+
+    fe = get_settings().frontend_base_url.rstrip("/")
+    return ScanShareResponse(
+        token=scan.share_token,
+        url=f"{fe}/shared/{scan.share_token}",
+    )
+
+
+@router.delete("/scans/{scan_id}/share", status_code=status.HTTP_204_NO_CONTENT)
+async def revoke_share(
+    scan_id: str,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    sid = _parse_uuid(scan_id, "BAD_SCAN_ID")
+    scan = await db.get(Scan, sid)
+    if scan is None or scan.deleted_at is not None:
+        raise AppError("SCAN_NOT_FOUND", "scan not found", status.HTTP_404_NOT_FOUND)
+    if not await user_can_access_repo(db, user.id, scan.repository_id):
+        raise AppError("SCAN_NOT_FOUND", "scan not found", status.HTTP_404_NOT_FOUND)
+    scan.share_token = None
+    scan.share_created_at = None
+    await db.commit()
+
+
+@public_router.get("/{token}", response_model=PublicScan)
+async def get_public_scan(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    if not token or len(token) < 16 or len(token) > 64:
+        raise AppError("SHARE_NOT_FOUND", "not found", status.HTTP_404_NOT_FOUND)
+    stmt = select(Scan).where(
+        Scan.share_token == token,
+        Scan.deleted_at.is_(None),
+    )
+    scan = (await db.execute(stmt)).scalar_one_or_none()
+    if scan is None:
+        raise AppError("SHARE_NOT_FOUND", "not found", status.HTTP_404_NOT_FOUND)
+    repo = await db.get(Repository, scan.repository_id)
+    if repo is None:
+        raise AppError("SHARE_NOT_FOUND", "not found", status.HTTP_404_NOT_FOUND)
+
+    fstmt = (
+        select(ScanFinding)
+        .where(ScanFinding.scan_id == scan.id, ScanFinding.deleted_at.is_(None))
+        .order_by(ScanFinding.severity, ScanFinding.path, ScanFinding.line.nulls_last())
+    )
+    findings = (await db.execute(fstmt)).scalars().all()
+    return PublicScan(
+        repo_full_name=repo.full_name,
+        head_sha=scan.head_sha,
+        ref=scan.ref,
+        score=scan.score,
+        summary=scan.summary,
+        counts=scan.counts,
+        files_scanned=scan.files_scanned,
+        model=scan.model,
+        finished_at=scan.finished_at,
+        findings=[
+            PublicScanFinding(
+                path=f.path,
+                line=f.line,
+                severity=f.severity,
+                category=f.category,
+                message=f.message,
+                suggestion=f.suggestion,
+            )
+            for f in findings
+        ],
     )

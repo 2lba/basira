@@ -38,6 +38,10 @@ class Scan(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    share_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    share_created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         Index("idx_scans_repository_id", "repository_id"),

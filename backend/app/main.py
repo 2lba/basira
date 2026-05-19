@@ -11,6 +11,7 @@ from app.api.routes.auth import router as auth_router
 from app.api.routes.health import router as health_router
 from app.api.routes.repos import router as repos_router
 from app.api.routes.reviews import router as reviews_router
+from app.api.routes.scans import public_router as share_router
 from app.api.routes.scans import router as scans_router
 from app.api.routes.webhooks import router as webhook_router
 from app.config import get_settings
@@ -72,6 +73,7 @@ def create_app() -> FastAPI:
     app.include_router(repos_router)
     app.include_router(reviews_router)
     app.include_router(scans_router)
+    app.include_router(share_router)
 
     if settings.e2e_test_mode:
         from app.api.routes.e2e import router as e2e_router

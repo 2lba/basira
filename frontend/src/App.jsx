@@ -9,9 +9,21 @@ import ReviewDetail from "./pages/ReviewDetail.jsx";
 import ScanDetail from "./pages/ScanDetail.jsx";
 import ScanCompare from "./pages/ScanCompare.jsx";
 import Scans from "./pages/Scans.jsx";
+import SharedScan from "./pages/SharedScan.jsx";
 import Account from "./pages/Account.jsx";
 
 export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/shared/:token" element={<SharedScan />} />
+        <Route path="/*" element={<AppShell />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function AppShell() {
   const { user, loading, reload } = useSession();
 
   if (loading) {
@@ -27,20 +39,18 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout user={user} onLogout={reload} />}>
-          <Route index element={<Repos />} />
-          <Route path="repos/:id" element={<RepoDetail />} />
-          <Route path="reviews" element={<Reviews />} />
-          <Route path="reviews/:id" element={<ReviewDetail />} />
-          <Route path="scans" element={<Scans />} />
-          <Route path="scans/compare" element={<ScanCompare />} />
-          <Route path="scans/:id" element={<ScanDetail />} />
-          <Route path="settings" element={<Account user={user} />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route element={<Layout user={user} onLogout={reload} />}>
+        <Route index element={<Repos />} />
+        <Route path="repos/:id" element={<RepoDetail />} />
+        <Route path="reviews" element={<Reviews />} />
+        <Route path="reviews/:id" element={<ReviewDetail />} />
+        <Route path="scans" element={<Scans />} />
+        <Route path="scans/compare" element={<ScanCompare />} />
+        <Route path="scans/:id" element={<ScanDetail />} />
+        <Route path="settings" element={<Account user={user} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
   );
 }
