@@ -15,6 +15,7 @@ router = APIRouter(prefix="/api/repos", tags=["repos"])
 
 ALLOWED_SEVERITIES = {"nit", "minor", "major", "critical"}
 ALLOWED_MODELS = {"claude-sonnet-4-5", "claude-opus-4-5", "claude-haiku-4-5"}
+ALLOWED_SCHEDULE_KINDS = {"none", "daily", "weekly", "monthly"}
 
 
 def _to_out(r: Repository) -> RepoOut:
@@ -30,6 +31,12 @@ def _to_out(r: Repository) -> RepoOut:
         ignored_paths=r.ignored_paths,
         custom_rules=r.custom_rules,
         model_override=r.model_override,
+        schedule_kind=r.schedule_kind,
+        schedule_dow=r.schedule_dow,
+        schedule_dom=r.schedule_dom,
+        schedule_hour=r.schedule_hour,
+        schedule_minute=r.schedule_minute,
+        last_scheduled_run_at=r.last_scheduled_run_at,
     )
 
 
@@ -103,6 +110,40 @@ async def update_repo(
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         repo.model_override = update.model_override or None
+    if update.schedule_kind is not None:
+        if update.schedule_kind not in ALLOWED_SCHEDULE_KINDS:
+            raise AppError(
+                "BAD_SCHEDULE",
+                f"schedule must be one of {sorted(ALLOWED_SCHEDULE_KINDS)}",
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        repo.schedule_kind = update.schedule_kind
+        if update.schedule_kind == "none":
+            repo.schedule_dow = None
+            repo.schedule_dom = None
+            repo.schedule_hour = None
+            repo.schedule_minute = None
+    if update.schedule_hour is not None:
+        repo.schedule_hour = update.schedule_hour
+    if update.schedule_minute is not None:
+        repo.schedule_minute = update.schedule_minute
+    if update.schedule_dow is not None:
+        repo.schedule_dow = update.schedule_dow
+    if update.schedule_dom is not None:
+        repo.schedule_dom = update.schedule_dom
+
+    if repo.schedule_kind == "weekly" and repo.schedule_dow is None:
+        raise AppError(
+            "BAD_SCHEDULE",
+            "weekly schedule requires schedule_dow",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+    if repo.schedule_kind == "monthly" and repo.schedule_dom is None:
+        raise AppError(
+            "BAD_SCHEDULE",
+            "monthly schedule requires schedule_dom",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
 
     await db.commit()
     await db.refresh(repo)

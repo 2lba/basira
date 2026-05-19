@@ -17,6 +17,12 @@ class RepoOut(BaseModel):
     ignored_paths: list[str] | None = None
     custom_rules: str | None = None
     model_override: str | None = None
+    schedule_kind: str = "none"
+    schedule_dow: int | None = None
+    schedule_dom: int | None = None
+    schedule_hour: int | None = None
+    schedule_minute: int | None = None
+    last_scheduled_run_at: datetime | None = None
 
 
 class RepoUpdate(BaseModel):
@@ -25,6 +31,11 @@ class RepoUpdate(BaseModel):
     ignored_paths: list[str] | None = None
     custom_rules: str | None = Field(default=None, max_length=10_000)
     model_override: str | None = Field(default=None, max_length=64)
+    schedule_kind: str | None = Field(default=None, max_length=16)
+    schedule_dow: int | None = Field(default=None, ge=0, le=6)
+    schedule_dom: int | None = Field(default=None, ge=1, le=31)
+    schedule_hour: int | None = Field(default=None, ge=0, le=23)
+    schedule_minute: int | None = Field(default=None, ge=0, le=59)
 
 
 class ReviewListItem(BaseModel):

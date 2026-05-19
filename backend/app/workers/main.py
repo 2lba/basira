@@ -1,6 +1,7 @@
 from typing import Any
 
 from arq.connections import RedisSettings
+from arq.cron import cron
 
 from app.config import get_settings
 from app.core.logging import get_logger, setup_logging
@@ -107,9 +108,21 @@ async def scan_repo(ctx, scan_id: str) -> dict:
     return result
 
 
+async def scheduler_tick(ctx) -> int:
+    from app.db.session import AsyncSessionLocal
+    from app.services.scheduler import run_due_scheduled_scans
+
+    async with AsyncSessionLocal() as db:
+        created = await run_due_scheduled_scans(db)
+    if created:
+        log.info("worker.scheduler_tick.enqueued", count=len(created))
+    return len(created)
+
+
 class WorkerSettings:
     redis_settings = _redis_settings()
     functions = [ping, review_pr, scan_repo]
+    cron_jobs = [cron(scheduler_tick, minute=set(range(60)))]
     on_startup = on_startup
     on_shutdown = on_shutdown
     max_jobs = 10

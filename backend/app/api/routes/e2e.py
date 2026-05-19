@@ -308,3 +308,13 @@ async def sink_clear(kind: str):
     finally:
         await r.aclose()
     return {"ok": True}
+
+
+@router.post("/scheduler/tick")
+async def scheduler_tick(db: AsyncSession = Depends(get_db)):
+    """Run the scheduler immediately using current UTC time. Returns the list
+    of scan ids that were enqueued."""
+    from app.services.scheduler import run_due_scheduled_scans
+
+    created = await run_due_scheduled_scans(db)
+    return {"scan_ids": created}

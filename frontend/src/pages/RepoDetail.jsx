@@ -38,6 +38,11 @@ export default function RepoDetail() {
           ignored_paths: (r.ignored_paths || []).join("\n"),
           custom_rules: r.custom_rules || "",
           model_override: r.model_override || "",
+          schedule_kind: r.schedule_kind || "none",
+          schedule_dow: r.schedule_dow ?? 0,
+          schedule_dom: r.schedule_dom ?? 1,
+          schedule_hour: r.schedule_hour ?? 9,
+          schedule_minute: r.schedule_minute ?? 0,
         });
       })
       .catch((e) => !cancelled && setError(e.message));
@@ -86,9 +91,24 @@ export default function RepoDetail() {
           .filter(Boolean),
         custom_rules: draft.custom_rules,
         model_override: draft.model_override,
+        schedule_kind: draft.schedule_kind,
+        schedule_hour: Number(draft.schedule_hour),
+        schedule_minute: Number(draft.schedule_minute),
+        schedule_dow:
+          draft.schedule_kind === "weekly" ? Number(draft.schedule_dow) : null,
+        schedule_dom:
+          draft.schedule_kind === "monthly" ? Number(draft.schedule_dom) : null,
       };
       const updated = await updateRepo(id, body);
       setRepo(updated);
+      setDraft({
+        ...draft,
+        schedule_kind: updated.schedule_kind || "none",
+        schedule_dow: updated.schedule_dow ?? 0,
+        schedule_dom: updated.schedule_dom ?? 1,
+        schedule_hour: updated.schedule_hour ?? 9,
+        schedule_minute: updated.schedule_minute ?? 0,
+      });
     } catch (e) {
       setError(e.message);
     } finally {
@@ -308,6 +328,100 @@ export default function RepoDetail() {
           />
         </div>
 
+        <div className="card" data-testid="schedule-card">
+          <Label>scan schedule</Label>
+          <p className="text-fg-muted text-xs mt-1">
+            Run a full repository scan automatically. Times are in UTC.
+          </p>
+          <select
+            data-testid="schedule-kind"
+            value={draft.schedule_kind}
+            onChange={(e) =>
+              setDraft({ ...draft, schedule_kind: e.target.value })
+            }
+            className="input mt-3"
+          >
+            <option value="none">disabled</option>
+            <option value="daily">daily</option>
+            <option value="weekly">weekly</option>
+            <option value="monthly">monthly</option>
+          </select>
+
+          {draft.schedule_kind !== "none" && (
+            <div className="mt-3 space-y-3">
+              {draft.schedule_kind === "weekly" && (
+                <ScheduleField label="day of week">
+                  <select
+                    data-testid="schedule-dow"
+                    value={draft.schedule_dow}
+                    onChange={(e) =>
+                      setDraft({ ...draft, schedule_dow: e.target.value })
+                    }
+                    className="input"
+                  >
+                    {[
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday",
+                      "Saturday",
+                      "Sunday",
+                    ].map((d, i) => (
+                      <option key={d} value={i}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </ScheduleField>
+              )}
+              {draft.schedule_kind === "monthly" && (
+                <ScheduleField label="day of month">
+                  <input
+                    data-testid="schedule-dom"
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={draft.schedule_dom}
+                    onChange={(e) =>
+                      setDraft({ ...draft, schedule_dom: e.target.value })
+                    }
+                    className="input"
+                  />
+                </ScheduleField>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <ScheduleField label="hour (UTC)">
+                  <input
+                    data-testid="schedule-hour"
+                    type="number"
+                    min={0}
+                    max={23}
+                    value={draft.schedule_hour}
+                    onChange={(e) =>
+                      setDraft({ ...draft, schedule_hour: e.target.value })
+                    }
+                    className="input"
+                  />
+                </ScheduleField>
+                <ScheduleField label="minute">
+                  <input
+                    data-testid="schedule-minute"
+                    type="number"
+                    min={0}
+                    max={59}
+                    value={draft.schedule_minute}
+                    onChange={(e) =>
+                      setDraft({ ...draft, schedule_minute: e.target.value })
+                    }
+                    className="input"
+                  />
+                </ScheduleField>
+              </div>
+            </div>
+          )}
+        </div>
+
         {error && <p className="text-danger text-sm">{error}</p>}
 
         <div className="flex gap-3">
@@ -352,6 +466,17 @@ function ActiveScanCard({ scan }) {
 
 function Label({ children }) {
   return <label className="text-sm text-fg font-medium">{children}</label>;
+}
+
+function ScheduleField({ label, children }) {
+  return (
+    <label className="block text-sm">
+      <span className="text-fg-muted text-xs uppercase tracking-wider">
+        {label}
+      </span>
+      <div className="mt-1">{children}</div>
+    </label>
+  );
 }
 
 function Toggle({ checked, onChange }) {
