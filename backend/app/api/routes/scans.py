@@ -281,6 +281,9 @@ async def get_scan(
                 message=f.message,
                 suggestion=f.suggestion,
                 confidence=float(f.confidence) if f.confidence is not None else None,
+                resolved_at=f.resolved_at,
+                false_positive_at=f.false_positive_at,
+                dedup_key=f.dedup_key,
             )
             for f in findings
         ],

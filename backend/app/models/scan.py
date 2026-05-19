@@ -65,8 +65,16 @@ class ScanFinding(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     message: Mapped[str] = mapped_column(Text, nullable=False)
     suggestion: Mapped[str | None] = mapped_column(Text, nullable=True)
     confidence: Mapped[float | None] = mapped_column(Numeric(4, 3), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    false_positive_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    dedup_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
     __table_args__ = (
         Index("idx_scan_findings_scan_id", "scan_id"),
         Index("idx_scan_findings_severity", "severity"),
+        Index("idx_scan_findings_dedup_key", "dedup_key"),
     )

@@ -110,6 +110,9 @@ class ScanFindingOut(BaseModel):
     message: str
     suggestion: str | None
     confidence: float | None
+    resolved_at: datetime | None = None
+    false_positive_at: datetime | None = None
+    dedup_key: str | None = None
 
 
 class ScanDetail(ScanListItem):

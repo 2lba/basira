@@ -31,6 +31,8 @@ class Repository(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     last_scheduled_run_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    ignored_categories: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    false_positive_keys: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
 
     __table_args__ = (
         Index("idx_repositories_full_name", "full_name"),

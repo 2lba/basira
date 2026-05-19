@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import re
 import uuid
 from dataclasses import dataclass, field
@@ -38,6 +39,13 @@ TOTAL_TOKEN_BUDGET = 100_000
 ProgressCallback = Callable[[int, str], Awaitable[None]]
 
 SEVERITY_WEIGHTS = {"critical": 20, "major": 8, "minor": 3, "nit": 1}
+
+
+def make_dedup_key(path: str, line: int | None, severity: str, category: str, message: str) -> str:
+    """Stable signature for a finding, used to suppress repo-level false
+    positives and to power compare. Hashes the message to keep keys short."""
+    msg_hash = hashlib.sha256(message.strip().encode("utf-8")).hexdigest()[:16]
+    return f"{path}|{line or 0}|{severity}|{category}|{msg_hash}"
 
 # code extensions Claude reviews well; everything else is skipped
 ALLOWED_EXTENSIONS = {
@@ -323,7 +331,16 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
         counts = aggregate_counts(capped)
         score = compute_score(counts)
 
+        ignored_cats = set(repo.ignored_categories or [])
+        fp_keys = set(repo.false_positive_keys or [])
         for c in capped:
+            if c["category"] in ignored_cats:
+                continue
+            key = make_dedup_key(
+                c["file"], c["line"], c["severity"], c["category"], c["message"]
+            )
+            if key in fp_keys:
+                continue
             db.add(
                 ScanFinding(
                     scan_id=scan.id,
@@ -334,6 +351,7 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
                     message=c["message"],
                     suggestion=c["suggestion"],
                     confidence=c["confidence"],
+                    dedup_key=key,
                 )
             )
 
@@ -456,7 +474,18 @@ async def _run_scan_e2e_stub(
                 "confidence": 0.7,
             },
         ]
+    ignored_cats = set(repo.ignored_categories or [])
+    fp_keys = set(repo.false_positive_keys or [])
+    kept_findings: list[dict] = []
     for f in findings:
+        if f["category"] in ignored_cats:
+            continue
+        key = make_dedup_key(
+            f["path"], f["line"], f["severity"], f["category"], f["message"]
+        )
+        if key in fp_keys:
+            continue
+        kept_findings.append(f)
         db.add(
             ScanFinding(
                 scan_id=scan.id,
@@ -467,9 +496,10 @@ async def _run_scan_e2e_stub(
                 message=f["message"],
                 suggestion=f["suggestion"],
                 confidence=f["confidence"],
+                dedup_key=key,
             )
         )
-    counts = aggregate_counts(findings)
+    counts = aggregate_counts(kept_findings)
     scan.counts = counts
     scan.score = compute_score(counts)
     scan.summary = build_summary(counts, 8)
@@ -481,4 +511,4 @@ async def _run_scan_e2e_stub(
     scan.status = "succeeded"
     scan.finished_at = datetime.now(UTC)
     await _set_progress(db, scan, 100, "done")
-    return ScanOutcome(scan=scan, findings_created=len(findings))
+    return ScanOutcome(scan=scan, findings_created=len(kept_findings))
