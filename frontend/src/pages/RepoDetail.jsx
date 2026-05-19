@@ -1,10 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { getRepo, updateRepo } from "../api/client.js";
+import { ArrowLeft, Play } from "lucide-react";
+import {
+  getRepo,
+  updateRepo,
+  startScan,
+  listRepoScans,
+} from "../api/client.js";
+import { ScanListRow } from "../components/features/ScanCard.jsx";
 
 const SEVERITIES = ["nit", "minor", "major", "critical"];
 const MODELS = ["", "claude-sonnet-4-5", "claude-opus-4-5", "claude-haiku-4-5"];
+const ACTIVE = new Set(["pending", "running"]);
 
 export default function RepoDetail() {
   const { id } = useParams();
@@ -12,6 +19,10 @@ export default function RepoDetail() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [draft, setDraft] = useState(null);
+  const [scans, setScans] = useState(null);
+  const [scanError, setScanError] = useState(null);
+  const [starting, setStarting] = useState(false);
+  const pollRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,6 +39,30 @@ export default function RepoDetail() {
         });
       })
       .catch((e) => !cancelled && setError(e.message));
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    pollRef.current += 1;
+    const myTick = pollRef.current;
+
+    async function load() {
+      try {
+        const list = await listRepoScans(id);
+        if (cancelled || myTick !== pollRef.current) return;
+        setScans(list);
+        const anyActive = list.some((s) => ACTIVE.has(s.status));
+        if (anyActive) {
+          setTimeout(load, 1200);
+        }
+      } catch (e) {
+        if (!cancelled) setScanError(e.message);
+      }
+    }
+    load();
     return () => {
       cancelled = true;
     };
@@ -59,20 +94,96 @@ export default function RepoDetail() {
     }
   }
 
+  async function scanNow() {
+    setStarting(true);
+    setScanError(null);
+    try {
+      const s = await startScan(id);
+      setScans((prev) => {
+        const filtered = (prev || []).filter((x) => x.id !== s.id);
+        return [s, ...filtered];
+      });
+      // restart polling
+      pollRef.current += 1;
+      const myTick = pollRef.current;
+      const poll = async () => {
+        try {
+          const list = await listRepoScans(id);
+          if (myTick !== pollRef.current) return;
+          setScans(list);
+          if (list.some((x) => ACTIVE.has(x.status))) {
+            setTimeout(poll, 1200);
+          }
+        } catch {
+          // swallow during polling
+        }
+      };
+      setTimeout(poll, 800);
+    } catch (e) {
+      setScanError(e.message);
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  const activeScan = (scans || []).find((s) => ACTIVE.has(s.status));
+  const recentDone = (scans || []).filter((s) => !ACTIVE.has(s.status));
+
   return (
-    <section>
+    <section data-testid="repo-detail">
       <Link to="/" className="btn btn-ghost mb-4">
         <ArrowLeft size={14} />
         <span>back</span>
       </Link>
 
-      <h1 className="text-2xl font-semibold tracking-tight">{repo.full_name}</h1>
-      <p className="mt-1 text-fg-secondary text-sm">
-        default branch: <span className="font-mono">{repo.default_branch}</span> ·
-        {repo.private ? " private" : " public"}
-      </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{repo.full_name}</h1>
+          <p className="mt-1 text-fg-secondary text-sm">
+            default branch:{" "}
+            <span className="font-mono">{repo.default_branch}</span> ·
+            {repo.private ? " private" : " public"}
+          </p>
+        </div>
+        <button
+          data-testid="scan-now"
+          disabled={starting || !!activeScan}
+          onClick={scanNow}
+          className="btn btn-primary disabled:opacity-50"
+        >
+          <Play size={14} />
+          <span>
+            {activeScan ? "scanning..." : starting ? "starting..." : "scan now"}
+          </span>
+        </button>
+      </div>
 
-      <div className="mt-8 space-y-6 max-w-2xl">
+      <div className="mt-8 space-y-6" data-testid="scans-section">
+        <h2 className="text-sm uppercase tracking-wider text-fg-muted">scans</h2>
+        {scanError && <p className="text-danger text-sm">{scanError}</p>}
+        {activeScan && (
+          <ActiveScanCard scan={activeScan} />
+        )}
+        {scans === null ? (
+          <div className="card h-20 animate-pulse" />
+        ) : recentDone.length === 0 && !activeScan ? (
+          <p className="text-fg-secondary text-sm">
+            No scans yet. Click "scan now" to run your first repository scan.
+          </p>
+        ) : (
+          <ul className="space-y-2" data-testid="scan-history">
+            {recentDone.map((s) => (
+              <li key={s.id}>
+                <ScanListRow scan={s} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="mt-12 space-y-6 max-w-2xl">
+        <h2 className="text-sm uppercase tracking-wider text-fg-muted">settings</h2>
+
         <div className="card">
           <Label>review status</Label>
           <div className="mt-2 flex items-center gap-3">
@@ -165,6 +276,32 @@ export default function RepoDetail() {
         </div>
       </div>
     </section>
+  );
+}
+
+function ActiveScanCard({ scan }) {
+  return (
+    <Link
+      to={`/scans/${scan.id}`}
+      className="card block hover:border-border transition-colors"
+      data-testid="active-scan-card"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1">
+          <p className="text-fg text-sm" data-testid="active-progress-message">
+            {scan.progress_message || "queued"}
+          </p>
+          <div className="mt-2 w-full h-1.5 bg-bg border border-border-subtle rounded-full overflow-hidden">
+            <div
+              data-testid="active-progress-bar"
+              className="h-full bg-accent transition-all"
+              style={{ width: `${scan.progress}%` }}
+            />
+          </div>
+        </div>
+        <span className="text-fg-muted text-xs font-mono">{scan.progress}%</span>
+      </div>
+    </Link>
   );
 }
 

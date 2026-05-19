@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { LogOut, GitPullRequest, GitBranch, Settings } from "lucide-react";
+import { LogOut, GitPullRequest, GitBranch, Settings, Search } from "lucide-react";
 import { logout } from "../api/client.js";
 
 export default function Layout({ user, onLogout }) {
@@ -20,6 +20,7 @@ export default function Layout({ user, onLogout }) {
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           <NavItem to="/" icon={<GitBranch size={16} />} label="repositories" end />
+          <NavItem to="/scans" icon={<Search size={16} />} label="scans" />
           <NavItem to="/reviews" icon={<GitPullRequest size={16} />} label="reviews" />
           <NavItem to="/settings" icon={<Settings size={16} />} label="account" />
         </nav>

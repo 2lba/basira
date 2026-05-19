@@ -6,6 +6,8 @@ import Repos from "./pages/Repos.jsx";
 import RepoDetail from "./pages/RepoDetail.jsx";
 import Reviews from "./pages/Reviews.jsx";
 import ReviewDetail from "./pages/ReviewDetail.jsx";
+import ScanDetail from "./pages/ScanDetail.jsx";
+import Scans from "./pages/Scans.jsx";
 import Account from "./pages/Account.jsx";
 
 export default function App() {
@@ -31,6 +33,8 @@ export default function App() {
           <Route path="repos/:id" element={<RepoDetail />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="reviews/:id" element={<ReviewDetail />} />
+          <Route path="scans" element={<Scans />} />
+          <Route path="scans/:id" element={<ScanDetail />} />
           <Route path="settings" element={<Account user={user} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

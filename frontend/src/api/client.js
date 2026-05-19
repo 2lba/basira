@@ -38,3 +38,9 @@ export const listReviews = (params = {}) => {
   return api(`/api/reviews${q ? `?${q}` : ""}`);
 };
 export const getReview = (id) => api(`/api/reviews/${id}`);
+
+export const startScan = (repoId) =>
+  api(`/api/repos/${repoId}/scans`, { method: "POST" });
+export const listRepoScans = (repoId) => api(`/api/repos/${repoId}/scans`);
+export const listAllScans = () => api(`/api/scans`);
+export const getScan = (id) => api(`/api/scans/${id}`);
