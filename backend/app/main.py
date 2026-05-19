@@ -31,6 +31,9 @@ from app.core.rate_limit import limiter
 setup_logging()
 log = get_logger("basira.api")
 settings = get_settings()
+# refuse to start in production with default secrets or unset GitHub App.
+# This is the single line that prevents shipping with "change-me" SECRET_KEY.
+settings.assert_production_safe()
 
 
 @asynccontextmanager
