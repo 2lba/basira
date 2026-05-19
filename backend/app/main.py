@@ -9,6 +9,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from app import __version__
 from app.api.routes.auth import router as auth_router
 from app.api.routes.health import router as health_router
+from app.api.routes.webhooks import router as webhook_router
 from app.config import get_settings
 from app.core.errors import (
     AppError,
@@ -64,6 +65,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(webhook_router)
 
     return app
 

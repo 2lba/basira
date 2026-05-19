@@ -8,6 +8,7 @@ os.environ.setdefault(
     "postgresql+asyncpg://reviewly:reviewly_dev_password@postgres:5432/reviewly",
 )
 os.environ.setdefault("REDIS_URL", "redis://redis:6379/0")
+os.environ.setdefault("GITHUB_APP_WEBHOOK_SECRET", "test_webhook_secret")
 
 import pytest
 import redis.asyncio as aioredis
@@ -29,16 +30,19 @@ async def _clean_state():
                 text(
                     "TRUNCATE TABLE refresh_tokens, users, "
                     "github_installations, installation_repositories, "
-                    "review_comments, reviews, pull_requests, repositories, jobs "
+                    "review_comments, reviews, pull_requests, repositories, "
+                    "jobs, webhook_events "
                     "RESTART IDENTITY CASCADE"
                 )
             )
-        async for k in r.scan_iter(match="auth:lockout:*"):
-            await r.delete(k)
+        await r.flushdb()
         yield
     finally:
         await r.aclose()
         await engine.dispose()
+        from app.workers.queue import close_pool
+
+        await close_pool()
 
 
 @pytest.fixture

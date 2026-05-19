@@ -51,6 +51,15 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 
 
 async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    from app.core.logging import get_logger
+
+    get_logger("reviewly.errors").error(
+        "unhandled_exception",
+        path=str(request.url.path),
+        method=request.method,
+        err_type=exc.__class__.__name__,
+        err_msg=str(exc)[:500],
+    )
     return error_response(
         "INTERNAL",
         "internal server error",
