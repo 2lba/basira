@@ -5,6 +5,7 @@ import { logout } from "../api/client.js";
 import ShortcutsModal from "./ShortcutsModal.jsx";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts.js";
 import Logo from "./Logo.jsx";
+import MissingKeyBanner from "./MissingKeyBanner.jsx";
 
 export default function Layout({ user, onLogout }) {
   const [help, setHelp] = useState(false);
@@ -66,6 +67,7 @@ export default function Layout({ user, onLogout }) {
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
+        <MissingKeyBanner />
         <div className="max-w-content mx-auto px-8 py-8">
           <Outlet context={{ user }} />
         </div>

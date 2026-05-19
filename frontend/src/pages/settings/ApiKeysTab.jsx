@@ -6,6 +6,7 @@ import {
   deleteAnthropicKey,
   testAnthropicKey,
 } from "../../api/client.js";
+import { notifyApiKeysChanged } from "../../components/MissingKeyBanner.jsx";
 
 export default function ApiKeysTab() {
   const [keys, setKeys] = useState(null);
@@ -18,6 +19,7 @@ export default function ApiKeysTab() {
       const data = await listApiKeys();
       setKeys(data);
       setError(null);
+      notifyApiKeysChanged();
     } catch (e) {
       setError(e.message);
     }

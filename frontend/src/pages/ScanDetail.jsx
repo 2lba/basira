@@ -259,6 +259,30 @@ function ReportPanel({
   onSearch,
 }) {
   if (scan.status === "failed") {
+    const missingKey = (scan.error || "").includes("MISSING_API_KEY");
+    if (missingKey) {
+      return (
+        <div
+          data-testid="scan-missing-key"
+          className="mt-6 card border-warning/40"
+        >
+          <h2 className="text-sm uppercase tracking-wider text-warning">
+            no api key
+          </h2>
+          <p className="mt-2 text-fg-secondary text-sm">
+            this scan could not run because your account has no Anthropic API
+            key configured. add one and re-trigger the scan.
+          </p>
+          <Link
+            to="/settings/api-keys"
+            data-testid="scan-add-api-key"
+            className="btn btn-primary mt-4 inline-block"
+          >
+            add api key
+          </Link>
+        </div>
+      );
+    }
     return (
       <div className="mt-6 card border-danger/40">
         <h2 className="text-sm uppercase tracking-wider text-danger">scan failed</h2>
