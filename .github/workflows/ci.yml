@@ -36,6 +36,9 @@ jobs:
 
     env:
       APP_ENV: test
+      # conftest.py rewrites this to .../basira_test so the autouse
+      # _clean_state fixture can TRUNCATE freely without touching the
+      # dev/prod database. We pre-create basira_test below.
       DATABASE_URL: postgresql+asyncpg://basira:basira_dev_password@localhost:5432/basira
       REDIS_URL: redis://localhost:6379/0
       SECRET_KEY: ci-test-secret
@@ -61,7 +64,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-          pip install pip-audit
 
       - name: ruff
         working-directory: backend
@@ -71,8 +73,28 @@ jobs:
         working-directory: backend
         run: black --check app tests
 
+      - name: bandit
+        working-directory: backend
+        continue-on-error: true  # surface but don't block
+        run: bandit -r app -ll
+
+      - name: create test db
+        env:
+          PGPASSWORD: basira_dev_password
+        run: |
+          psql -h localhost -U basira -d postgres \
+            -c "CREATE DATABASE basira_test OWNER basira;" || true
+
       - name: migrate
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://basira:basira_dev_password@localhost:5432/basira
+        run: alembic upgrade head
+
+      - name: migrate test db
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://basira:basira_dev_password@localhost:5432/basira_test
         run: alembic upgrade head
 
       - name: tests
@@ -81,8 +103,7 @@ jobs:
 
       - name: pip-audit
         working-directory: backend
-        continue-on-error: true
-        run: pip-audit --strict
+        run: pip-audit --strict --skip-editable
 
       - name: upload coverage
         if: always()
@@ -122,5 +143,4 @@ jobs:
 
       - name: npm audit
         working-directory: frontend
-        continue-on-error: true
         run: npm audit --audit-level=high
