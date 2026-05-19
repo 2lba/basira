@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import {
   getSmtp,
   updateSmtp,
@@ -87,13 +88,29 @@ function SmtpCard() {
   return (
     <div className="card space-y-4" data-testid="smtp-card">
       <div>
-        <h2 className="text-sm uppercase tracking-wider text-fg-muted">
-          email notifications
-        </h2>
-        <p className="mt-1 text-fg-secondary text-sm">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h2 className="text-sm uppercase tracking-wider text-fg-muted">
+            email notifications
+          </h2>
+          <span
+            data-testid="smtp-optional-badge"
+            className="text-xs px-2 py-0.5 rounded border border-border-subtle text-fg-muted"
+          >
+            Optional · Requires your own SMTP
+          </span>
+        </div>
+        <p className="mt-2 text-fg-secondary text-sm">
           Send yourself an email when a scan finishes. SMTP credentials stay on
           your own server; passwords are encrypted at rest.
         </p>
+        <p
+          className="mt-2 text-fg-muted text-xs"
+          data-testid="smtp-alternatives-hint"
+        >
+          Don't have SMTP? Use Slack or Discord below instead — they work with
+          just a webhook URL.
+        </p>
+        <SmtpGuide />
       </div>
 
       <Field label="SMTP host">
@@ -184,8 +201,11 @@ function SmtpCard() {
         <span>
           email me when scans finish{" "}
           {!canEnable && (
-            <span className="text-fg-muted text-xs">
-              (fill host, port, from first)
+            <span
+              className="text-fg-muted text-xs"
+              data-testid="smtp-disabled-hint"
+            >
+              Configure SMTP first to enable email.
             </span>
           )}
         </span>
@@ -212,6 +232,96 @@ function SmtpCard() {
           {saving ? "saving..." : "save"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function SmtpGuide() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3" data-testid="smtp-guide">
+      <button
+        type="button"
+        data-testid="smtp-guide-toggle"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+      >
+        {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+        <span>{open ? "hide" : "how to set this up"}</span>
+      </button>
+      {open && (
+        <div
+          className="mt-3 bg-bg border border-border-subtle rounded p-3 text-xs text-fg-secondary space-y-3"
+          data-testid="smtp-guide-body"
+        >
+          <p>
+            SMTP is the protocol your email provider uses to send mail. You
+            need 4 things to enable email alerts:
+          </p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>
+              <span className="text-fg">host</span> — the server name (e.g.
+              smtp.gmail.com)
+            </li>
+            <li>
+              <span className="text-fg">port</span> — usually 587 (with
+              STARTTLS) or 465 (with SSL)
+            </li>
+            <li>
+              <span className="text-fg">username</span> — your email or API key
+              identity
+            </li>
+            <li>
+              <span className="text-fg">password</span> — an app password or
+              API key; not your account password
+            </li>
+          </ul>
+
+          <div>
+            <p className="text-fg">Example: Gmail</p>
+            <p className="mt-1">
+              host <code className="font-mono">smtp.gmail.com</code>, port{" "}
+              <code className="font-mono">587</code>, STARTTLS on, username
+              your gmail address, password an{" "}
+              <a
+                href="https://myaccount.google.com/apppasswords"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-accent hover:underline"
+              >
+                App Password
+              </a>{" "}
+              (not your account password). 2FA must be on.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-fg">Example: Resend (free SMTP)</p>
+            <p className="mt-1">
+              Sign up at{" "}
+              <a
+                href="https://resend.com"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-accent hover:underline"
+              >
+                resend.com
+              </a>
+              , create an API key. Then use host{" "}
+              <code className="font-mono">smtp.resend.com</code>, port{" "}
+              <code className="font-mono">587</code>, username{" "}
+              <code className="font-mono">resend</code>, password = your API
+              key. Free tier covers 3000 emails/month.
+            </p>
+          </div>
+
+          <p className="text-fg-muted">
+            Prefer not to configure SMTP at all? Slack and Discord work with
+            just a webhook URL — no credentials needed.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
