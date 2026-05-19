@@ -4,6 +4,7 @@ import smtplib
 import uuid
 from email.message import EmailMessage
 
+import httpx
 import redis.asyncio as aioredis
 
 from app.config import get_settings
@@ -16,6 +17,7 @@ from app.models.user import User
 log = get_logger("reviewly.notifier")
 
 _E2E_LAST_EMAIL_KEY = "e2e:last_email"
+_WEBHOOK_TIMEOUT = 10.0
 
 
 def _scan_subject(scan: Scan, repo: Repository) -> str:
@@ -180,6 +182,183 @@ async def notify_scan_finished(
         return None
 
 
+def _share_url(scan: Scan, frontend_url: str) -> str | None:
+    if not scan.share_token:
+        return None
+    return f"{frontend_url.rstrip('/')}/shared/{scan.share_token}"
+
+
+def _severity_summary(counts: dict | None) -> str:
+    if not counts:
+        return "0 findings"
+    parts: list[str] = []
+    for sev in ("critical", "major", "minor", "nit"):
+        n = counts.get(sev, 0)
+        if n:
+            parts.append(f"{n} {sev}")
+    if not parts:
+        return "0 findings"
+    return ", ".join(parts)
+
+
+def _build_slack_payload(
+    scan: Scan, repo: Repository, frontend_url: str
+) -> dict:
+    score_line = (
+        f"*Score:* {scan.score}/100" if scan.score is not None else "*Score:* —"
+    )
+    summary = _severity_summary(scan.counts)
+    fe = frontend_url.rstrip("/")
+    report_url = f"{fe}/scans/{scan.id}"
+    share_url = _share_url(scan, frontend_url)
+    status_emoji = {"succeeded": ":white_check_mark:", "failed": ":x:"}.get(
+        scan.status, ":hourglass_flowing_sand:"
+    )
+    text = (
+        f"{status_emoji} *Reviewly scan {scan.status}* — `{repo.full_name}`"
+    )
+    sections: list[str] = [score_line, f"*Findings:* {summary}"]
+    if scan.ref:
+        sections.append(f"*Branch:* `{scan.ref}`")
+    if scan.head_sha:
+        sections.append(f"*Commit:* `{scan.head_sha[:7]}`")
+    if scan.error:
+        sections.append(f"*Error:* {scan.error[:300]}")
+    actions = [f"<{report_url}|view report>"]
+    if share_url:
+        actions.append(f"<{share_url}|public link>")
+    sections.append(" · ".join(actions))
+
+    blocks: list[dict] = [
+        {"type": "section", "text": {"type": "mrkdwn", "text": text}},
+        {
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": "\n".join(sections)},
+        },
+    ]
+    return {"text": text, "blocks": blocks}
+
+
+def _discord_color(scan: Scan) -> int:
+    if scan.status == "failed":
+        return 0xEF4444
+    if scan.score is None:
+        return 0x6366F1
+    if scan.score >= 80:
+        return 0x10B981
+    if scan.score >= 60:
+        return 0xF59E0B
+    return 0xEF4444
+
+
+def _build_discord_payload(
+    scan: Scan, repo: Repository, frontend_url: str
+) -> dict:
+    fe = frontend_url.rstrip("/")
+    report_url = f"{fe}/scans/{scan.id}"
+    share_url = _share_url(scan, frontend_url)
+
+    fields: list[dict] = []
+    fields.append(
+        {
+            "name": "Score",
+            "value": str(scan.score) + "/100" if scan.score is not None else "—",
+            "inline": True,
+        }
+    )
+    fields.append(
+        {
+            "name": "Status",
+            "value": scan.status,
+            "inline": True,
+        }
+    )
+    fields.append(
+        {
+            "name": "Findings",
+            "value": _severity_summary(scan.counts),
+            "inline": False,
+        }
+    )
+    if scan.ref:
+        fields.append({"name": "Branch", "value": scan.ref, "inline": True})
+    if scan.head_sha:
+        fields.append(
+            {"name": "Commit", "value": scan.head_sha[:7], "inline": True}
+        )
+    if share_url:
+        fields.append(
+            {"name": "Public link", "value": share_url, "inline": False}
+        )
+
+    embed = {
+        "title": f"Reviewly scan: {repo.full_name}",
+        "url": report_url,
+        "color": _discord_color(scan),
+        "fields": fields,
+    }
+    if scan.summary:
+        embed["description"] = scan.summary[:1000]
+    return {"embeds": [embed]}
+
+
+async def _post_webhook(url: str, payload: dict) -> bool:
+    async with httpx.AsyncClient(timeout=_WEBHOOK_TIMEOUT) as client:
+        r = await client.post(url, json=payload)
+    if r.status_code >= 400:
+        log.warning(
+            "notifier.webhook_failed",
+            status=r.status_code,
+            body=r.text[:200],
+        )
+        return False
+    return True
+
+
+async def notify_slack(scan: Scan, repo: Repository, user: User | None) -> dict | None:
+    if user is None or not user.notify_slack_enabled:
+        return None
+    if not user.slack_webhook_url_encrypted:
+        return None
+    try:
+        url = decrypt_token(user.slack_webhook_url_encrypted)
+    except CryptoError:
+        return None
+    payload = _build_slack_payload(scan, repo, get_settings().frontend_base_url)
+    try:
+        await _post_webhook(url, payload)
+    except Exception as e:
+        log.warning(
+            "notifier.slack_failed",
+            err=f"{e.__class__.__name__}: {str(e)[:200]}",
+        )
+        return None
+    return payload
+
+
+async def notify_discord(
+    scan: Scan, repo: Repository, user: User | None
+) -> dict | None:
+    if user is None or not user.notify_discord_enabled:
+        return None
+    if not user.discord_webhook_url_encrypted:
+        return None
+    try:
+        url = decrypt_token(user.discord_webhook_url_encrypted)
+    except CryptoError:
+        return None
+    payload = _build_discord_payload(scan, repo, get_settings().frontend_base_url)
+    try:
+        await _post_webhook(url, payload)
+    except Exception as e:
+        log.warning(
+            "notifier.discord_failed",
+            err=f"{e.__class__.__name__}: {str(e)[:200]}",
+        )
+        return None
+    return payload
+
+
 async def notify_by_scan_id(db_factory, scan_id: uuid.UUID) -> None:
     """Worker-friendly entry point. Loads scan/repo/user fresh from DB."""
     async with db_factory() as db:
@@ -195,3 +374,5 @@ async def notify_by_scan_id(db_factory, scan_id: uuid.UUID) -> None:
             else None
         )
         await notify_scan_finished(scan, repo, user)
+        await notify_slack(scan, repo, user)
+        await notify_discord(scan, repo, user)

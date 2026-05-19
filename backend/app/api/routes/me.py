@@ -6,9 +6,31 @@ from app.core.crypto import CryptoError, encrypt_token
 from app.core.errors import AppError
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.auth import SmtpSettingsOut, SmtpSettingsUpdate
+from app.schemas.auth import (
+    ChatWebhookOut,
+    ChatWebhookUpdate,
+    SmtpSettingsOut,
+    SmtpSettingsUpdate,
+)
 
 router = APIRouter(prefix="/api/me", tags=["me"])
+
+
+def _validate_webhook_url(url: str, kind: str) -> str:
+    url = url.strip()
+    if not url.startswith("https://") and not url.startswith("http://"):
+        raise AppError(
+            "BAD_URL",
+            "webhook url must start with http(s)://",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+    if len(url) > 2048:
+        raise AppError(
+            "BAD_URL",
+            "webhook url too long",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+    return url
 
 
 def _to_out(u: User) -> SmtpSettingsOut:
@@ -69,3 +91,83 @@ async def update_smtp(
     await db.commit()
     await db.refresh(user)
     return _to_out(user)
+
+
+def _chat_to_out(url_field: str | None, enabled: bool) -> ChatWebhookOut:
+    return ChatWebhookOut(url_set=bool(url_field), enabled=enabled)
+
+
+@router.get("/slack", response_model=ChatWebhookOut)
+async def get_slack(user: User = Depends(current_user)):
+    return _chat_to_out(user.slack_webhook_url_encrypted, user.notify_slack_enabled)
+
+
+@router.patch("/slack", response_model=ChatWebhookOut)
+async def update_slack(
+    body: ChatWebhookUpdate,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if body.clear:
+        user.slack_webhook_url_encrypted = None
+        user.notify_slack_enabled = False
+    elif body.url is not None and body.url != "":
+        url = _validate_webhook_url(body.url, "slack")
+        try:
+            user.slack_webhook_url_encrypted = encrypt_token(url)
+        except CryptoError as e:
+            raise AppError(
+                "CRYPTO_NOT_CONFIGURED", str(e), status.HTTP_503_SERVICE_UNAVAILABLE
+            ) from e
+    if body.enabled is not None:
+        if body.enabled and not user.slack_webhook_url_encrypted:
+            raise AppError(
+                "WEBHOOK_MISSING",
+                "set the slack webhook url before enabling",
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        user.notify_slack_enabled = bool(body.enabled)
+
+    await db.commit()
+    await db.refresh(user)
+    return _chat_to_out(user.slack_webhook_url_encrypted, user.notify_slack_enabled)
+
+
+@router.get("/discord", response_model=ChatWebhookOut)
+async def get_discord(user: User = Depends(current_user)):
+    return _chat_to_out(
+        user.discord_webhook_url_encrypted, user.notify_discord_enabled
+    )
+
+
+@router.patch("/discord", response_model=ChatWebhookOut)
+async def update_discord(
+    body: ChatWebhookUpdate,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if body.clear:
+        user.discord_webhook_url_encrypted = None
+        user.notify_discord_enabled = False
+    elif body.url is not None and body.url != "":
+        url = _validate_webhook_url(body.url, "discord")
+        try:
+            user.discord_webhook_url_encrypted = encrypt_token(url)
+        except CryptoError as e:
+            raise AppError(
+                "CRYPTO_NOT_CONFIGURED", str(e), status.HTTP_503_SERVICE_UNAVAILABLE
+            ) from e
+    if body.enabled is not None:
+        if body.enabled and not user.discord_webhook_url_encrypted:
+            raise AppError(
+                "WEBHOOK_MISSING",
+                "set the discord webhook url before enabling",
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        user.notify_discord_enabled = bool(body.enabled)
+
+    await db.commit()
+    await db.refresh(user)
+    return _chat_to_out(
+        user.discord_webhook_url_encrypted, user.notify_discord_enabled
+    )

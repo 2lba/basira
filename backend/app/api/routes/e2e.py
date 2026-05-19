@@ -4,6 +4,7 @@ These endpoints let a Playwright test seed a user/repo/installation directly
 without going through real OAuth or GitHub App flows. They are not registered
 in production builds.
 """
+import json
 import secrets
 
 from fastapi import APIRouter, Depends, Request, Response, status
@@ -260,4 +261,50 @@ async def clear_last_email():
     from app.services.notifier import clear_last_e2e_email
 
     await clear_last_e2e_email()
+    return {"ok": True}
+
+
+_SINK_PREFIX = "e2e:webhook_sink:"
+
+
+async def _redis():
+    import redis.asyncio as aioredis
+
+    return aioredis.from_url(get_settings().redis_url, decode_responses=True)
+
+
+@router.post("/webhook-sink/{kind}")
+async def sink_post(kind: str, request: Request):
+    if kind not in ("slack", "discord", "generic"):
+        return {"ok": False, "reason": "unknown kind"}
+    body_bytes = await request.body()
+    try:
+        payload = json.loads(body_bytes.decode() or "{}")
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        payload = {"raw": body_bytes.decode(errors="replace")}
+    r = await _redis()
+    try:
+        await r.set(_SINK_PREFIX + kind, json.dumps(payload), ex=600)
+    finally:
+        await r.aclose()
+    return {"ok": True}
+
+
+@router.get("/webhook-sink/{kind}")
+async def sink_get(kind: str):
+    r = await _redis()
+    try:
+        v = await r.get(_SINK_PREFIX + kind)
+    finally:
+        await r.aclose()
+    return {"payload": json.loads(v) if v else None}
+
+
+@router.post("/webhook-sink/{kind}/clear")
+async def sink_clear(kind: str):
+    r = await _redis()
+    try:
+        await r.delete(_SINK_PREFIX + kind)
+    finally:
+        await r.aclose()
     return {"ok": True}

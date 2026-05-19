@@ -23,4 +23,15 @@ class User(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
         Boolean, default=False, nullable=False
     )
 
+    slack_webhook_url_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    notify_slack_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+    discord_webhook_url_encrypted: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )
+    notify_discord_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+
     __table_args__ = (Index("idx_users_github_login", "github_login"),)

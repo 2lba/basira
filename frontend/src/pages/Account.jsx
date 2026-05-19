@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { getSmtp, updateSmtp } from "../api/client.js";
+import {
+  getSmtp,
+  updateSmtp,
+  getSlack,
+  updateSlack,
+  getDiscord,
+  updateDiscord,
+} from "../api/client.js";
+import ChatWebhookCard from "../components/features/ChatWebhookCard.jsx";
 
 export default function Account({ user }) {
   return (
@@ -16,6 +24,22 @@ export default function Account({ user }) {
       </div>
 
       <NotificationsCard />
+
+      <ChatWebhookCard
+        testId="slack-card"
+        title="slack"
+        description="Post scan results to a Slack channel via an incoming webhook."
+        load={getSlack}
+        save={updateSlack}
+      />
+
+      <ChatWebhookCard
+        testId="discord-card"
+        title="discord"
+        description="Post scan results to a Discord channel via a webhook URL."
+        load={getDiscord}
+        save={updateDiscord}
+      />
 
       <div className="mt-6 card">
         <h2 className="text-sm uppercase tracking-wider text-fg-muted">

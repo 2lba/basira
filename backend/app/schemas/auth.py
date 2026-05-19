@@ -35,3 +35,16 @@ class SmtpSettingsUpdate(BaseModel):
     smtp_use_tls: bool | None = None
     notify_email_enabled: bool | None = None
     clear_password: bool = False
+
+
+class ChatWebhookOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    url_set: bool
+    enabled: bool
+
+
+class ChatWebhookUpdate(BaseModel):
+    url: str | None = Field(default=None, max_length=2048)
+    enabled: bool | None = None
+    clear: bool = False

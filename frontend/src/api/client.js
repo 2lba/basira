@@ -61,3 +61,11 @@ export const getPublicScan = (token) => api(`/share/${encodeURIComponent(token)}
 export const getSmtp = () => api(`/api/me/smtp`);
 export const updateSmtp = (body) =>
   api(`/api/me/smtp`, { method: "PATCH", body: JSON.stringify(body) });
+
+export const getSlack = () => api(`/api/me/slack`);
+export const updateSlack = (body) =>
+  api(`/api/me/slack`, { method: "PATCH", body: JSON.stringify(body) });
+
+export const getDiscord = () => api(`/api/me/discord`);
+export const updateDiscord = (body) =>
+  api(`/api/me/discord`, { method: "PATCH", body: JSON.stringify(body) });
