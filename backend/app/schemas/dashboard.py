@@ -108,3 +108,22 @@ class ScanDetail(ScanListItem):
     cost_usd: float | None
     model: str | None
     error: str | None
+
+
+class ScanCompareEntry(BaseModel):
+    path: str
+    line: int | None
+    severity: str
+    category: str
+    message: str
+    suggestion: str | None
+
+
+class ScanCompareResult(BaseModel):
+    a: ScanListItem
+    b: ScanListItem
+    score_delta: int | None
+    new_findings: list[ScanCompareEntry]
+    resolved_findings: list[ScanCompareEntry]
+    persisting_findings: list[ScanCompareEntry]
+    counts_delta: dict[str, int]

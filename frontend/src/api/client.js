@@ -44,3 +44,5 @@ export const startScan = (repoId) =>
 export const listRepoScans = (repoId) => api(`/api/repos/${repoId}/scans`);
 export const listAllScans = () => api(`/api/scans`);
 export const getScan = (id) => api(`/api/scans/${id}`);
+export const compareScans = (a, b) =>
+  api(`/api/scans/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);

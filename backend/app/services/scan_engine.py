@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Awaitable, Callable
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -368,7 +369,11 @@ async def _run_scan_e2e_stub(
     db: AsyncSession, scan: Scan, repo: Repository
 ) -> ScanOutcome:
     """Deterministic scan path for end-to-end tests. Steps through progress so
-    the UI can render the progress bar, then emits canned findings."""
+    the UI can render the progress bar, then emits canned findings. Subsequent
+    scans for the same repo drop a nit and add a new minor so the compare view
+    has something to show."""
+    from sqlalchemy import func
+
     scan.status = "running"
     scan.started_at = datetime.now(UTC)
     scan.model = "claude-sonnet-4-5"
@@ -385,7 +390,20 @@ async def _run_scan_e2e_stub(
         await _set_progress(db, scan, pct, msg)
         await asyncio.sleep(0.5)
 
-    findings = [
+    prior = (
+        await db.execute(
+            select(func.count())
+            .select_from(Scan)
+            .where(
+                Scan.repository_id == repo.id,
+                Scan.id != scan.id,
+                Scan.status == "succeeded",
+                Scan.deleted_at.is_(None),
+            )
+        )
+    ).scalar_one()
+
+    base = [
         {
             "path": "app/auth.py",
             "line": 42,
@@ -413,16 +431,31 @@ async def _run_scan_e2e_stub(
             "suggestion": None,
             "confidence": 0.6,
         },
-        {
-            "path": "scripts/build.sh",
-            "line": None,
-            "severity": "nit",
-            "category": "style",
-            "message": "Missing trailing newline at end of file.",
-            "suggestion": None,
-            "confidence": 0.4,
-        },
     ]
+    if prior == 0:
+        findings = base + [
+            {
+                "path": "scripts/build.sh",
+                "line": None,
+                "severity": "nit",
+                "category": "style",
+                "message": "Missing trailing newline at end of file.",
+                "suggestion": None,
+                "confidence": 0.4,
+            },
+        ]
+    else:
+        findings = base + [
+            {
+                "path": "app/cache.py",
+                "line": 21,
+                "severity": "minor",
+                "category": "bug",
+                "message": "Cache key collision possible when user_id is None.",
+                "suggestion": None,
+                "confidence": 0.7,
+            },
+        ]
     for f in findings:
         db.add(
             ScanFinding(

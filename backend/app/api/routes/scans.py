@@ -11,6 +11,8 @@ from app.models.repository import Repository
 from app.models.scan import Scan, ScanFinding
 from app.models.user import User
 from app.schemas.dashboard import (
+    ScanCompareEntry,
+    ScanCompareResult,
     ScanDetail,
     ScanFindingOut,
     ScanListItem,
@@ -144,6 +146,96 @@ async def list_scans(
     )
     rows = (await db.execute(stmt)).all()
     return [_item(s, repo) for s, repo in rows]
+
+
+@router.get("/scans/compare", response_model=ScanCompareResult)
+async def compare_scans(
+    a: str,
+    b: str,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    a_id = _parse_uuid(a, "BAD_SCAN_ID")
+    b_id = _parse_uuid(b, "BAD_SCAN_ID")
+    if a_id == b_id:
+        raise AppError(
+            "SAME_SCAN", "cannot compare a scan with itself", status.HTTP_400_BAD_REQUEST
+        )
+
+    scan_a = await db.get(Scan, a_id)
+    scan_b = await db.get(Scan, b_id)
+    for s in (scan_a, scan_b):
+        if s is None or s.deleted_at is not None:
+            raise AppError("SCAN_NOT_FOUND", "scan not found", status.HTTP_404_NOT_FOUND)
+    if scan_a.repository_id != scan_b.repository_id:
+        raise AppError(
+            "REPO_MISMATCH",
+            "scans must belong to the same repo",
+            status.HTTP_400_BAD_REQUEST,
+        )
+    if not await user_can_access_repo(db, user.id, scan_a.repository_id):
+        raise AppError("SCAN_NOT_FOUND", "scan not found", status.HTTP_404_NOT_FOUND)
+
+    repo = await db.get(Repository, scan_a.repository_id)
+    if repo is None:
+        raise AppError("SCAN_NOT_FOUND", "scan not found", status.HTTP_404_NOT_FOUND)
+
+    f_a = (
+        await db.execute(
+            select(ScanFinding).where(
+                ScanFinding.scan_id == scan_a.id, ScanFinding.deleted_at.is_(None)
+            )
+        )
+    ).scalars().all()
+    f_b = (
+        await db.execute(
+            select(ScanFinding).where(
+                ScanFinding.scan_id == scan_b.id, ScanFinding.deleted_at.is_(None)
+            )
+        )
+    ).scalars().all()
+
+    def key(f: ScanFinding) -> tuple:
+        return (f.path, f.line, f.severity, f.category, f.message)
+
+    map_a = {key(f): f for f in f_a}
+    map_b = {key(f): f for f in f_b}
+    keys_a = set(map_a)
+    keys_b = set(map_b)
+
+    def to_entry(f: ScanFinding) -> ScanCompareEntry:
+        return ScanCompareEntry(
+            path=f.path,
+            line=f.line,
+            severity=f.severity,
+            category=f.category,
+            message=f.message,
+            suggestion=f.suggestion,
+        )
+
+    new = [to_entry(map_b[k]) for k in keys_b - keys_a]
+    resolved = [to_entry(map_a[k]) for k in keys_a - keys_b]
+    persisting = [to_entry(map_b[k]) for k in keys_a & keys_b]
+
+    counts_delta: dict[str, int] = {}
+    counts_a = scan_a.counts or {}
+    counts_b = scan_b.counts or {}
+    for k in ("total", "critical", "major", "minor", "nit"):
+        counts_delta[k] = int(counts_b.get(k, 0)) - int(counts_a.get(k, 0))
+
+    score_delta = None
+    if scan_a.score is not None and scan_b.score is not None:
+        score_delta = int(scan_b.score) - int(scan_a.score)
+
+    return ScanCompareResult(
+        a=_item(scan_a, repo),
+        b=_item(scan_b, repo),
+        score_delta=score_delta,
+        new_findings=new,
+        resolved_findings=resolved,
+        persisting_findings=persisting,
+        counts_delta=counts_delta,
+    )
 
 
 @router.get("/scans/{scan_id}", response_model=ScanDetail)

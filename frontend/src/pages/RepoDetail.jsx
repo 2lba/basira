@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Play } from "lucide-react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { ArrowLeft, Play, GitCompare } from "lucide-react";
 import {
   getRepo,
   updateRepo,
@@ -15,6 +15,7 @@ const ACTIVE = new Set(["pending", "running"]);
 
 export default function RepoDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [repo, setRepo] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -22,6 +23,7 @@ export default function RepoDetail() {
   const [scans, setScans] = useState(null);
   const [scanError, setScanError] = useState(null);
   const [starting, setStarting] = useState(false);
+  const [selected, setSelected] = useState([]);
   const pollRef = useRef(0);
 
   useEffect(() => {
@@ -129,6 +131,20 @@ export default function RepoDetail() {
   const activeScan = (scans || []).find((s) => ACTIVE.has(s.status));
   const recentDone = (scans || []).filter((s) => !ACTIVE.has(s.status));
 
+  function toggleSelect(scanId) {
+    setSelected((prev) => {
+      if (prev.includes(scanId)) return prev.filter((x) => x !== scanId);
+      if (prev.length >= 2) return [prev[1], scanId];
+      return [...prev, scanId];
+    });
+  }
+
+  function compareNow() {
+    if (selected.length !== 2) return;
+    const [a, b] = selected;
+    navigate(`/scans/compare?a=${a}&b=${b}`);
+  }
+
   return (
     <section data-testid="repo-detail">
       <Link to="/" className="btn btn-ghost mb-4">
@@ -159,7 +175,24 @@ export default function RepoDetail() {
       </div>
 
       <div className="mt-8 space-y-6" data-testid="scans-section">
-        <h2 className="text-sm uppercase tracking-wider text-fg-muted">scans</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm uppercase tracking-wider text-fg-muted">scans</h2>
+          {recentDone.length >= 2 && (
+            <button
+              data-testid="compare-button"
+              disabled={selected.length !== 2}
+              onClick={compareNow}
+              className="btn btn-ghost disabled:opacity-40"
+            >
+              <GitCompare size={14} />
+              <span>
+                {selected.length === 2
+                  ? "compare selected"
+                  : `compare (${selected.length}/2)`}
+              </span>
+            </button>
+          )}
+        </div>
         {scanError && <p className="text-danger text-sm">{scanError}</p>}
         {activeScan && (
           <ActiveScanCard scan={activeScan} />
@@ -173,8 +206,20 @@ export default function RepoDetail() {
         ) : (
           <ul className="space-y-2" data-testid="scan-history">
             {recentDone.map((s) => (
-              <li key={s.id}>
-                <ScanListRow scan={s} />
+              <li key={s.id} className="flex items-center gap-3">
+                {recentDone.length >= 2 && (
+                  <input
+                    type="checkbox"
+                    aria-label={`select scan ${s.id}`}
+                    data-testid={`select-scan-${s.id}`}
+                    checked={selected.includes(s.id)}
+                    onChange={() => toggleSelect(s.id)}
+                    className="w-4 h-4 accent-accent"
+                  />
+                )}
+                <div className="flex-1">
+                  <ScanListRow scan={s} />
+                </div>
               </li>
             ))}
           </ul>
