@@ -78,11 +78,33 @@ async def on_shutdown(ctx) -> None:
     log.info("worker.shutdown")
 
 
+async def scan_repo(ctx, scan_id: str) -> dict:
+    import uuid
+
+    from app.db.session import AsyncSessionLocal
+    from app.services.scan_engine import run_scan
+
+    log.info("worker.scan_repo.start", scan_id=scan_id)
+    sid = uuid.UUID(scan_id)
+    async with AsyncSessionLocal() as db:
+        try:
+            outcome = await run_scan(db, sid)
+        except Exception as e:
+            log.exception("worker.scan_repo.failed", scan_id=scan_id)
+            return {"scan_id": scan_id, "status": "failed", "err": str(e)[:200]}
+        return {
+            "scan_id": scan_id,
+            "status": outcome.scan.status,
+            "findings": outcome.findings_created,
+            "score": outcome.scan.score,
+        }
+
+
 class WorkerSettings:
     redis_settings = _redis_settings()
-    functions = [ping, review_pr]
+    functions = [ping, review_pr, scan_repo]
     on_startup = on_startup
     on_shutdown = on_shutdown
     max_jobs = 10
-    job_timeout = 300
+    job_timeout = 1800
     keep_result = 3600

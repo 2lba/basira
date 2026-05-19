@@ -177,6 +177,40 @@ class InstallationClient:
         )
         return r.json()
 
+    async def get_repo(self, owner: str, repo: str) -> dict[str, Any]:
+        r = await self._get(f"/repos/{owner}/{repo}")
+        return r.json()
+
+    async def get_branch_sha(self, owner: str, repo: str, branch: str) -> str:
+        r = await self._get(f"/repos/{owner}/{repo}/branches/{branch}")
+        return str(r.json()["commit"]["sha"])
+
+    async def get_tree(
+        self, owner: str, repo: str, sha: str, recursive: bool = True
+    ) -> list[dict[str, Any]]:
+        params = {"recursive": "1"} if recursive else None
+        r = await self._get(f"/repos/{owner}/{repo}/git/trees/{sha}", params=params)
+        data = r.json()
+        return list(data.get("tree", []) or [])
+
+    async def get_blob_text(self, owner: str, repo: str, sha: str) -> str:
+        """Fetches a blob and returns its decoded text. Returns '' for binary or
+        encodings we can't handle."""
+        import base64
+
+        r = await self._get(f"/repos/{owner}/{repo}/git/blobs/{sha}")
+        data = r.json()
+        if data.get("encoding") != "base64":
+            return ""
+        try:
+            raw = base64.b64decode(data.get("content", ""), validate=False)
+        except Exception:
+            return ""
+        try:
+            return raw.decode("utf-8")
+        except UnicodeDecodeError:
+            return ""
+
     @_retry()
     async def _put(self, path: str, body: dict, accept: str = JSON_MEDIA):
         async with httpx.AsyncClient(timeout=30.0) as client:

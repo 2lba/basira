@@ -11,6 +11,7 @@ from app.api.routes.auth import router as auth_router
 from app.api.routes.health import router as health_router
 from app.api.routes.repos import router as repos_router
 from app.api.routes.reviews import router as reviews_router
+from app.api.routes.scans import router as scans_router
 from app.api.routes.webhooks import router as webhook_router
 from app.config import get_settings
 from app.core.errors import (
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(webhook_router)
     app.include_router(repos_router)
     app.include_router(reviews_router)
+    app.include_router(scans_router)
 
     return app
 

@@ -65,3 +65,46 @@ class ReviewDetail(ReviewListItem):
     tokens_output: int | None
     cost_usd: float | None
     error: str | None
+
+
+class ScanListItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    repository_id: str
+    repo_full_name: str
+    status: str
+    progress: int
+    progress_message: str | None
+    ref: str | None
+    head_sha: str | None
+    score: int | None
+    summary: str | None
+    counts: dict[str, int] | None = None
+    files_scanned: int | None
+    files_skipped: int | None
+    created_at: datetime
+    started_at: datetime | None
+    finished_at: datetime | None
+
+
+class ScanFindingOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    path: str
+    line: int | None
+    severity: str
+    category: str
+    message: str
+    suggestion: str | None
+    confidence: float | None
+
+
+class ScanDetail(ScanListItem):
+    findings: list[ScanFindingOut]
+    tokens_input: int | None
+    tokens_output: int | None
+    cost_usd: float | None
+    model: str | None
+    error: str | None

@@ -38,3 +38,14 @@ async def enqueue_review(pull_request_id: uuid.UUID, **extra: Any) -> str:
         _job_id=job_id,
     )
     return job.job_id if job else job_id
+
+
+async def enqueue_scan(scan_id: uuid.UUID) -> str:
+    pool = await get_pool()
+    job_id = f"scan:{scan_id}"
+    job = await pool.enqueue_job(
+        "scan_repo",
+        str(scan_id),
+        _job_id=job_id,
+    )
+    return job.job_id if job else job_id
