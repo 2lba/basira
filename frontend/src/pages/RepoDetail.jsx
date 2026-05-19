@@ -8,6 +8,7 @@ import {
   listRepoScans,
 } from "../api/client.js";
 import { ScanListRow } from "../components/features/ScanCard.jsx";
+import ScoreChart from "../components/features/ScoreChart.jsx";
 
 const SEVERITIES = ["nit", "minor", "major", "critical"];
 const MODELS = ["", "claude-sonnet-4-5", "claude-opus-4-5", "claude-haiku-4-5"];
@@ -193,6 +194,12 @@ export default function RepoDetail() {
           </span>
         </button>
       </div>
+
+      {recentDone.length >= 2 && (
+        <div className="mt-8">
+          <ScoreChart scans={recentDone} />
+        </div>
+      )}
 
       <div className="mt-8 space-y-6" data-testid="scans-section">
         <div className="flex items-center justify-between">
