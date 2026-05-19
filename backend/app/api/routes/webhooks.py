@@ -34,7 +34,7 @@ async def github_webhook(
     body = await request.body()
 
     try:
-        verify_github_signature(body, settings.github_webhook_secret, x_hub_signature_256)
+        verify_github_signature(body, settings.github_app_webhook_secret, x_hub_signature_256)
     except WebhookSigError as e:
         log.warning("webhook.bad_signature", err=str(e), delivery=x_github_delivery)
         raise AppError(

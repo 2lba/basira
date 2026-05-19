@@ -21,7 +21,7 @@ from app.workers.main import review_pr as worker_review_pr
 def _secret() -> str:
     # sign with whatever the running config has, so the test passes regardless
     # of which secret docker-compose injected.
-    return get_settings().github_webhook_secret or "test_webhook_secret"
+    return get_settings().github_app_webhook_secret or "test_webhook_secret"
 
 
 async def _seed_install_and_link(db, repo_id_full_name=("acme/web", 5001), inst_id=99001):

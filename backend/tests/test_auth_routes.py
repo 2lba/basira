@@ -1,6 +1,6 @@
 async def test_should_redirect_when_login_called_with_client_id(client, monkeypatch):
-    monkeypatch.setenv("GITHUB_CLIENT_ID", "x")
-    monkeypatch.setenv("GITHUB_CLIENT_SECRET", "y")
+    monkeypatch.setenv("GITHUB_APP_CLIENT_ID", "x")
+    monkeypatch.setenv("GITHUB_APP_CLIENT_SECRET", "y")
     # force re-read of settings
     from app.config import get_settings
 
@@ -14,7 +14,7 @@ async def test_should_redirect_when_login_called_with_client_id(client, monkeypa
 
 
 async def test_should_503_when_github_not_configured(client, monkeypatch):
-    monkeypatch.setenv("GITHUB_CLIENT_ID", "")
+    monkeypatch.setenv("GITHUB_APP_CLIENT_ID", "")
     from app.config import get_settings
 
     get_settings.cache_clear()  # type: ignore[attr-defined]
