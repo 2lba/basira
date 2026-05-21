@@ -80,3 +80,6 @@ logs/
 postgres_data/
 redis_data/
 data/
+
+# claude tooling
+.claude/
