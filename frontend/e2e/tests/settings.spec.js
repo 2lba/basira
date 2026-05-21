@@ -28,7 +28,7 @@ test.describe("unified settings", () => {
     await page.getByTestId("tab-api-keys").click();
     await expect(page).toHaveURL(/\/settings\/api-keys$/);
     await expect(page.getByTestId("api-keys-tab")).toBeVisible();
-    await expect(page.locator("body")).toContainText(/coming/i);
+    await expect(page.locator("body")).toContainText(/anthropic/i);
 
     await page.getByTestId("tab-account").click();
     await expect(page).toHaveURL(/\/settings$/);
