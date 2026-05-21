@@ -10,13 +10,15 @@ async function resetState(request) {
   }
 }
 
-async function seedFixture(request) {
+async function seedFixture(request, overrides = {}) {
   const res = await request.post(`${API_BASE}/test/seed`, {
     data: {
       github_login: "playwright-user",
       repo_full_name: "playwright-user/sample-repo",
       private: false,
       default_branch: "main",
+      with_api_key: true,
+      ...overrides,
     },
   });
   if (!res.ok()) {
@@ -65,6 +67,14 @@ export const test = base.extend({
 });
 
 export { expect };
+
+export async function seedWithoutApiKey(request, context) {
+  await resetState(request);
+  const seed = await seedFixture(request, { with_api_key: false });
+  const cookies = seed.rawCookies.map((raw) => parseSetCookie(raw, "localhost"));
+  await context.addCookies(cookies);
+  return seed;
+}
 
 export async function finalizeScan(request, scanId) {
   const res = await request.post(`${API_BASE}/test/scans/${scanId}/finalize-now`);
