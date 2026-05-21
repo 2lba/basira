@@ -204,7 +204,6 @@ async def test_encrypted_in_db_not_plaintext(db, monkeypatch, alice):
 async def test_scan_without_key_fails_with_missing_api_key(db, monkeypatch, alice):
     """Scan engine must refuse to call Anthropic when the owner has no
     key configured, and surface MISSING_API_KEY on the scan row."""
-    import uuid
 
     from app.models.repository import Repository
     from app.models.scan import Scan
@@ -230,13 +229,13 @@ async def test_scan_without_key_fails_with_missing_api_key(db, monkeypatch, alic
     await db.commit()
     await db.refresh(scan)
 
-    monkeypatch.setattr(
-        "app.config.get_settings",
-        lambda: type("S", (), {"e2e_test_mode": True})(),
-        raising=False,
-    )
+    from app.config import get_settings
 
-    with pytest.raises(Exception):
+    monkeypatch.setattr(get_settings(), "e2e_test_mode", True)
+
+    from app.integrations.anthropic_client import AnthropicError
+
+    with pytest.raises(AnthropicError):
         await run_scan(db, scan.id)
 
     await db.refresh(scan)

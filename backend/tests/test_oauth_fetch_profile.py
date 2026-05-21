@@ -10,7 +10,7 @@ from app.integrations.github_oauth import _noreply_email, fetch_profile
 def _resp(status: int, body=None) -> httpx.Response:
     if body is None:
         content = b""
-    elif isinstance(body, (dict, list)):
+    elif isinstance(body, dict | list):
         content = json.dumps(body).encode()
     else:
         content = str(body).encode()

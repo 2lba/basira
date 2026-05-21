@@ -85,7 +85,7 @@ async def upsert_user_api_key(
     last_four = raw_key[-4:] if len(raw_key) >= 4 else raw_key
     try:
         encrypted = encrypt_token(raw_key)
-    except CryptoError as e:
+    except CryptoError:
         # surface so the route can return a 503 instead of a vague 500
         raise
 
