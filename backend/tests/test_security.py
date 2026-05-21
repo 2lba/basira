@@ -310,3 +310,72 @@ async def test_slack_webhook_rejects_non_http_schemes(client, db, bad_url):
     client.cookies.update(_auth_cookies(str(user_a.id), "alice"))
     r = await client.patch("/api/me/slack", json={"url": bad_url})
     assert r.status_code in {400, 422}, f"{bad_url!r} got {r.status_code}"
+
+
+# BYOK-focused attacks --------------------------------------------------
+
+
+async def test_byok_mass_assignment_ignores_extra_fields(client, db):
+    """The PUT schema only declares api_key. Anything else (provider,
+    is_valid, user_id) must be silently dropped by pydantic, never used
+    to upsert as someone else."""
+    from app.models.user_api_key import UserApiKey
+    from sqlalchemy import select
+
+    user_a, _ = await _seed_user_with_repo(db, "alice", 1001)
+    user_b, _ = await _seed_user_with_repo(db, "bob", 2002)
+    client.cookies.update(_auth_cookies(str(user_a.id), "alice"))
+
+    import app.api.routes.user_api_keys as uapi_routes
+    from app.services.user_api_key import ValidationResult
+
+    async def fake_validate(api_key: str) -> ValidationResult:
+        return ValidationResult(True, None)
+
+    uapi_routes.validate_anthropic_key = fake_validate
+
+    r = await client.put(
+        "/api/me/api-keys/anthropic",
+        json={
+            "api_key": "sk-ant-massassign-1234567890",
+            "user_id": str(user_b.id),
+            "is_valid": False,
+            "provider": "openai",
+        },
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["provider"] == "anthropic"
+    assert body["is_valid"] is True
+
+    rows = (await db.execute(select(UserApiKey))).scalars().all()
+    assert len(rows) == 1
+    assert rows[0].user_id == user_a.id
+    assert rows[0].provider == "anthropic"
+
+
+async def test_byok_api_key_not_in_error_response_or_logs(client, db, caplog):
+    """If validation rejects the key we must NOT echo the plaintext into
+    the error payload or the structured logs."""
+    user_a, _ = await _seed_user_with_repo(db, "alice", 1001)
+    client.cookies.update(_auth_cookies(str(user_a.id), "alice"))
+
+    import app.api.routes.user_api_keys as uapi_routes
+    from app.services.user_api_key import ValidationResult
+
+    async def fake_validate(api_key: str) -> ValidationResult:
+        return ValidationResult(False, "rejected")
+
+    uapi_routes.validate_anthropic_key = fake_validate
+    secret = "sk-ant-this-must-not-be-logged-XXXX"
+
+    import logging
+    with caplog.at_level(logging.DEBUG):
+        r = await client.put(
+            "/api/me/api-keys/anthropic",
+            json={"api_key": secret},
+        )
+    assert r.status_code == 400
+    assert secret not in r.text
+    for record in caplog.records:
+        assert secret not in record.getMessage()

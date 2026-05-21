@@ -22,8 +22,9 @@ dependencies = [
     # cryptography 44.0.0 had CVE-2024-12797, CVE-2026-26007, CVE-2026-34073;
     # 46.0.7 fixes CVE-2026-39892
     "cryptography==46.0.7",
-    # pyjwt 2.10.1 had CVE-2026-32597 (signature confusion)
-    "pyjwt==2.12.0",
+    # pyjwt 2.10.1 had CVE-2026-32597 (signature confusion). 2.12.0 had
+    # PYSEC-2025-183. 2.12.1 is the current clean release.
+    "pyjwt==2.12.1",
     "slowapi==0.1.9",
     # python-multipart 0.0.20 had 3 CVEs (DoS via crafted multipart)
     "python-multipart==0.0.27",
