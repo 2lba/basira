@@ -1,174 +1,142 @@
 # Basira
 
-> We see what you don't.
+AI code reviewer for your GitHub repositories. Self-hosted, BYOK, open source.
 
-AI code reviews on every GitHub pull request. Open source. Self-hosted. Free.
+![](docs/screenshots/01-landing.png)
 
-The name is Basira (Arabic: بصيرة) - insight, foresight. The tool reads your
-diffs and tells you what you missed before a reviewer does.
+Basira scans a repo on demand and posts findings with severity, file location, and reasoning. You bring your own Anthropic API key, so there is no shared infrastructure cost and your code never touches a third party server other than Anthropic's.
 
-Status: v0.1.0 - early, but feature-complete enough to dogfood. Not battle tested at scale.
+## Why I built this
 
-## what it does
+CodeRabbit and similar tools are good but closed and paid. I wanted something I could read the prompts of, run on my own box, and point at any repo without a per-seat fee. So I built Basira.
 
-1. You install the basira GitHub App on your repo.
-2. Someone opens a pull request.
-3. basira fetches the diff, sends it to Claude with a structured prompt, and posts a review back to the PR - summary comment plus inline comments where it matters.
-4. You read, dismiss, or fix.
+It is honest about its limits. Below is a scan of one of my own projects, LogHunter v0.1.0. Score is zero. Sixty-two findings. I left the screenshot in instead of replacing it with a cleaner repo, because that is how Basira behaves on a real codebase that has not been hardened yet.
 
-## stack
+![](docs/screenshots/08-scan-report.png)
 
-- python 3.13, fastapi, sqlalchemy 2 async
-- postgres 16, redis, arq workers
-- react 19, vite, tailwind 3
-- claude api (anthropic) - sonnet-4-5 by default
-- github app + webhooks
-- docker compose for local dev
+## What it does
 
-## install
+- Scan any connected GitHub repo on demand
+- Group findings by severity (critical, major, minor, nit)
+- Filter findings, resolve them, mark as false positive
+- Compare two scans to see what changed
+- Export results as markdown
+- Share a scan via public link
+- Notify on Slack, Discord, or email when a scan finishes
+- Schedule daily, weekly, or monthly scans
+- BYOK: bring your own Anthropic API key
 
-You need:
+## Tech
 
-- docker + docker compose
-- a github account (to register the app)
-- an anthropic api key
+Python 3.13, FastAPI, PostgreSQL 16, Redis 7, React 18, Vite, Tailwind, Playwright, Docker Compose.
 
-### 1. clone and configure
+## Quick start
 
 ```
-git clone <this repo>
+git clone https://github.com/2lba/basira.git
 cd basira
 cp .env.example .env
 ```
 
 Fill in `.env`:
 
-- `SECRET_KEY` - random string, generate with `python -c "import secrets; print(secrets.token_urlsafe(64))"`
-- `TOKEN_ENCRYPTION_KEY` - Fernet key, generate with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
-- `ANTHROPIC_API_KEY` - from https://console.anthropic.com
-- `GITHUB_APP_ID`, `GITHUB_APP_NAME`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_WEBHOOK_SECRET`, `GITHUB_APP_PRIVATE_KEY_PATH` - see step 2
+- `GITHUB_APP_ID`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_WEBHOOK_SECRET` from your GitHub App
+- `FERNET_KEY` for at-rest encryption (`python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`)
+- `JWT_SECRET` (long random string)
 
-### 2. set up the GitHub App
+Place your GitHub App private key at `secrets/github-app-key.pem` with `chmod 600`.
 
-basira talks to GitHub through a GitHub App that you own. The App's URL slug
-is what users see when they install it on a repo - it must match
-`GITHUB_APP_NAME` in your `.env`.
-
-For local development the default is `basira-dev`. Pick whatever slug GitHub
-gives you and set both:
+Then:
 
 ```
-GITHUB_APP_NAME=basira-dev          # appears in github.com/apps/{name}
+docker compose up -d
 ```
 
-Steps to register the App:
+Open http://localhost:5173 and continue with GitHub.
 
-1. Go to https://github.com/settings/apps → New GitHub App
-2. **GitHub App name**: must match `GITHUB_APP_NAME` (e.g. `basira-dev`). The
-   slug must be globally unique on GitHub - pick something specific to you.
-3. Homepage URL: wherever you host basira (or your repo URL while testing)
-4. Webhook URL: `https://your-domain/webhooks/github`
-5. Webhook secret: pick a long random string, put it in `.env` as `GITHUB_APP_WEBHOOK_SECRET`
-6. Permissions: Repository contents (read), Pull requests (read+write), Metadata (read), Email addresses (read)
-7. Subscribe to events: Pull request, Installation, Installation repositories
-8. Save. Note the App ID, Client ID, Client Secret. Generate a private key (.pem) and save it as `secrets/github-app-key.pem` with `chmod 600`.
-9. Fill `.env` with `GITHUB_APP_ID`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_PRIVATE_KEY_PATH=/run/secrets/github-app-key.pem`
+## Setup walkthrough
 
-The "Install on GitHub" button inside the app builds its URL from
-`GITHUB_APP_NAME`, so if you ever rename the App on GitHub, update the env
-var to match.
+### 1. Create the GitHub App
 
-### 3. boot it
+Go to https://github.com/settings/apps/new and configure:
 
-```
-make build
-make up
-make migrate
-```
+- **Callback URL**: `https://your-domain.com/auth/github/callback`
+- **Webhook URL**: `https://your-domain.com/webhooks/github`
+- **Permissions**: Contents (read), Issues (read & write), Pull requests (read & write), Email addresses (read)
+- **Events**: Push, Pull request
 
-Then open http://localhost:5173 - sign in with GitHub and install the app on a repo. Open a PR. Watch basira comment.
+Save the App ID, Client ID, Client Secret, Webhook Secret, and download the private key.
 
-For development the backend listens on port 8001 on the host (mapped from container port 8000).
+### 2. Sign in
 
-## features
+![](docs/screenshots/02-github-signin.png)
 
-- structured json reviews (severity, category, line anchors)
-- per-repo settings: enable/disable, severity threshold, ignored paths (regex), custom rules, model override
-- diff chunking that respects token budget per request and total budget per PR
-- idempotent re-reviews on PR resync (diff hash dedup)
-- review history dashboard with token usage and rough cost tracking
-- HMAC SHA-256 webhook signature verification
-- single-use refresh tokens with reuse detection
-- account lockout on repeated failed logins
-- structured json logging via structlog
+### 3. Authorize Basira
 
-## honest comparison vs CodeRabbit
+![](docs/screenshots/03-github-authorize.png)
 
-basira is aiming for roughly 60-70% feature parity. Things missing that CodeRabbit has:
+### 4. Install on the repos you want to scan
 
-- chat replies on review threads (you can't ask basira follow-up questions yet)
-- custom rules engine beyond plain-text instructions
-- learning from feedback / training on your team's preferences
-- multi-model consensus
-- a polished marketing site
+![](docs/screenshots/04-github-install.png)
 
-What basira does better:
+### 5. Add your Anthropic API key
 
-- free, self-hosted, no per-seat pricing
-- transparent prompts (read `app/services/prompt.py` to see exactly what basira tells Claude)
-- your code never leaves your infra except for the Claude API call
+Get a key from https://console.anthropic.com/settings/keys and paste it into Settings → API Keys. Basira encrypts it at rest with Fernet and uses it for all your scans. Nothing is shared with other users.
 
-## limits in v0.1.0
+![](docs/screenshots/11-api-key-saved.png)
 
-- one user per deployment (single-tenant)
-- review re-syncs post a new review instead of editing the old inline comments (GitHub API limit; we leave the old summary in place)
-- no IDE plugins
-- no Gitlab/Bitbucket
-- works best on Python, JS/TS, Go, Rust, Java; weaker on niche languages
+### 6. Pick a repo and scan
 
-## development
+![](docs/screenshots/06-repos-list.png)
+![](docs/screenshots/07-scan-progress.png)
 
-```
-make build       # build images
-make up          # start the stack
-make logs        # tail logs
-make test        # run pytest in the backend container
-make fmt         # black + ruff --fix
-make lint        # ruff + black --check
-make migrate     # alembic upgrade head
-make migration m="message"  # autogenerate
-```
+A typical scan runs in 3 to 6 minutes and costs around $0.40 against your Anthropic account.
 
-## project layout
+## BYOK economics
 
-```
-backend/
-  app/
-    api/routes/   fastapi routes
-    core/         config, security, deps, logging
-    db/           session, base
-    integrations/ github, anthropic clients
-    models/       sqlalchemy orm
-    schemas/      pydantic
-    services/     business logic
-    workers/      arq jobs
-  alembic/        migrations
-  tests/
-frontend/
-  src/
-    pages/        route components
-    components/   layout, ui
-    hooks/        useSession, etc
-    api/          client
-docs/
-deployment/
-.github/workflows/  ci
-```
+Each scan calls Claude Sonnet directly from the Basira backend, billed to your key. There is no per-seat fee, no markup, no quota. If you scan ten repos a month, you pay Anthropic about $4. If you scan once, you pay forty cents.
 
-## contributing
+## Notifications
 
-Issues and PRs welcome. Keep the spirit of "small, sharp, honest code". No marketing language. No emoji. No conventional-commit prefixes - just lowercase short messages.
+Send scan results to Slack, Discord, or email. SMTP credentials and webhook URLs stay on your server, encrypted at rest.
 
-## license
+![](docs/screenshots/10-settings-notifications.png)
 
-MIT
+## Security
+
+- All secrets encrypted at rest with Fernet
+- JWT auth with rate limiting on login
+- Webhook signature verification (HMAC-SHA256)
+- SSRF prevention on webhook URLs (rejects private and metadata addresses)
+- IDOR tests in CI
+- Production mode refuses to boot with default secrets
+
+See [SECURITY.md](SECURITY.md) for the threat model and the OWASP Top 10 audit results, and [docs/security/](docs/security/) for the full reports.
+
+## What it does not do
+
+- Run in CI as a blocking check (yet)
+- Review individual pull requests inline (PR comments are on the roadmap)
+- Scan private repos without a GitHub App installation
+- Replace a human reviewer
+
+## Roadmap
+
+- PR-level reviews (inline comments)
+- Custom rule packs
+- Self-host one-click on Railway and Render
+- Local model support (Ollama)
+
+## Contributing
+
+PRs welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+## Author
+
+Built by Abdulaziz AlQahtani ([@2lba](https://github.com/2lba)). Mechanical engineering student in Saudi Arabia, building security and developer tools on the side.
+
+If Basira is useful to you, [support on Ko-fi](https://ko-fi.com/2lbaa).
