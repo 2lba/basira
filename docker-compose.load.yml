@@ -1,0 +1,14 @@
+services:
+  backend:
+    environment:
+      # the production-grade rate limits are intentionally tight; for the
+      # load profile we raise them so locust traffic isn't 429'd before we
+      # measure anything useful.
+      RATE_LIMIT_GENERAL: "100000/minute"
+      RATE_LIMIT_AUTH: "100000/minute"
+      RATE_LIMIT_USER_HOURLY: "10000000/hour"
+  worker:
+    environment:
+      RATE_LIMIT_GENERAL: "100000/minute"
+      RATE_LIMIT_AUTH: "100000/minute"
+      RATE_LIMIT_USER_HOURLY: "10000000/hour"
