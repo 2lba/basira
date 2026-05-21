@@ -54,6 +54,7 @@ docker compose up -d
 
 Open http://localhost:5173 and continue with GitHub.
 
+
 ## Setup walkthrough
 
 ### 1. Create the GitHub App
@@ -67,40 +68,44 @@ Go to https://github.com/settings/apps/new and configure:
 
 Save the App ID, Client ID, Client Secret, Webhook Secret, and download the private key.
 
-### 2. Sign in
+### 2. Sign in with GitHub
 
-![](docs/screenshots/02-github-signin.png)
+![Sign in](docs/screenshots/02-signin.png)
 
-### 3. Authorize Basira
+### 3. Install Basira on your repos
 
-![](docs/screenshots/03-github-authorize.png)
+![Install GitHub App](docs/screenshots/03-install.png)
 
-### 4. Install on the repos you want to scan
+### 4. Connect a repo
 
-![](docs/screenshots/04-github-install.png)
+![Repositories list](docs/screenshots/04-repos.png)
 
 ### 5. Add your Anthropic API key
 
 Get a key from https://console.anthropic.com/settings/keys and paste it into Settings → API Keys. Basira encrypts it at rest with Fernet and uses it for all your scans. Nothing is shared with other users.
 
-![](docs/screenshots/11-api-key-saved.png)
+![Add key modal](docs/screenshots/05-add-key.png)
+![Key saved](docs/screenshots/06-key-saved.png)
 
-### 6. Pick a repo and scan
+### 6. Configure and scan
 
-![](docs/screenshots/06-repos-list.png)
-![](docs/screenshots/07-scan-progress.png)
+Open the repo, adjust severity threshold or ignored paths if you want, then click "scan now".
+
+![Repo settings](docs/screenshots/07-repo-settings.png)
+![Scans list](docs/screenshots/08-scans.png)
 
 A typical scan runs in 3 to 6 minutes and costs around $0.40 against your Anthropic account.
 
 ## BYOK economics
 
-Each scan calls Claude Sonnet directly from the Basira backend, billed to your key. There is no per-seat fee, no markup, no quota. If you scan ten repos a month, you pay Anthropic about $4. If you scan once, you pay forty cents.
+Each scan calls Claude Sonnet directly from the Basira backend, billed to your key. There is no per-seat fee, no markup, no quota imposed by Basira.
 
 ## Notifications
 
 Send scan results to Slack, Discord, or email. SMTP credentials and webhook URLs stay on your server, encrypted at rest.
 
-![](docs/screenshots/10-settings-notifications.png)
+![Notifications](docs/screenshots/09-notifications.png)
+
 
 ## Security
 
