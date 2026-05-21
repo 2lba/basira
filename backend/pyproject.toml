@@ -38,7 +38,7 @@ dev = [
     # dev-only tools; CVE fixes are not load-bearing but pinning current
     "pytest==9.0.3",
     "pytest-asyncio==1.3.0",
-    "pytest-cov==6.0.0",
+    "pytest-cov==7.1.0",
     "httpx==0.28.1",
     "ruff==0.8.4",
     "black==26.3.1",
