@@ -48,6 +48,7 @@ def _item(scan: Scan, repo: Repository) -> ScanListItem:
         created_at=scan.created_at,
         started_at=scan.started_at,
         finished_at=scan.finished_at,
+        error=scan.error,
     )
 
 

@@ -98,6 +98,7 @@ class ScanListItem(BaseModel):
     created_at: datetime
     started_at: datetime | None
     finished_at: datetime | None
+    error: str | None = None
 
 
 class ScanFindingOut(BaseModel):
@@ -122,7 +123,6 @@ class ScanDetail(ScanListItem):
     tokens_output: int | None
     cost_usd: float | None
     model: str | None
-    error: str | None
 
 
 class ScanCompareEntry(BaseModel):

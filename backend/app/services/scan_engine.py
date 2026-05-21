@@ -238,6 +238,21 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
         raise ValueError("repository not found")
 
     if settings.e2e_test_mode:
+        from app.services.user_api_key import get_user_anthropic_key
+
+        owner_id = scan.triggered_by_user_id
+        if owner_id is None:
+            inst_for_owner = await find_installation_for_repo(db, repo.id)
+            if inst_for_owner is not None:
+                owner_id = inst_for_owner.user_id
+        if owner_id is not None and not await get_user_anthropic_key(
+            db, owner_id
+        ):
+            scan.status = "failed"
+            scan.error = "MISSING_API_KEY: add your Anthropic API key in Settings"
+            scan.finished_at = datetime.now(UTC)
+            await db.commit()
+            raise AnthropicError("missing user anthropic api key")
         return await _run_scan_e2e_stub(db, scan, repo)
 
     inst = await find_installation_for_repo(db, repo.id)

@@ -31,6 +31,7 @@ class SeedRequest(BaseModel):
     private: bool = False
     default_branch: str = "main"
     extra_unconnected: list[str] = []
+    with_api_key: bool = True
 
 
 class SeedResponse(BaseModel):
@@ -50,8 +51,10 @@ async def reset(db: AsyncSession = Depends(get_db)):
     await db.execute(delete(Scan))
     await db.execute(delete(InstallationRepository))
     await db.execute(delete(GithubInstallation))
+    from app.models.user_api_key import UserApiKey
     from app.models.user_repository import UserRepository
 
+    await db.execute(delete(UserApiKey))
     await db.execute(delete(UserRepository))
     await db.execute(delete(Repository))
     await db.execute(delete(User).where(User.github_login.like("playwright%")))
@@ -138,6 +141,20 @@ async def seed(
         await db.flush()
         db.add(UserRepository(user_id=user.id, repository_id=extra.id))
         unconnected_ids.append(str(extra.id))
+
+    if body.with_api_key:
+        from app.services.user_api_key import (
+            PROVIDER_ANTHROPIC,
+            upsert_user_api_key,
+        )
+
+        await upsert_user_api_key(
+            db,
+            user.id,
+            PROVIDER_ANTHROPIC,
+            "sk-ant-e2e-playwright-seed-key",
+            is_valid=True,
+        )
 
     await db.commit()
     await db.refresh(user)

@@ -38,6 +38,12 @@ async def validate_anthropic_key(api_key: str) -> ValidationResult:
     """
     if not api_key or len(api_key) < 20:
         return ValidationResult(False, "key looks malformed")
+    # e2e bypass: keys prefixed with sk-ant-e2e- skip the upstream call so
+    # tests don't spend real budget or require a network round trip
+    from app.config import get_settings
+
+    if get_settings().e2e_test_mode and api_key.startswith("sk-ant-e2e-"):
+        return ValidationResult(True, None)
     try:
         from anthropic import AsyncAnthropic
     except ImportError:  # pragma: no cover
