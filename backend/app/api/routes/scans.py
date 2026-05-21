@@ -298,7 +298,6 @@ async def get_scan(
         tokens_output=scan.tokens_output,
         cost_usd=float(scan.cost_usd) if scan.cost_usd is not None else None,
         model=scan.model,
-        error=scan.error,
     )
 
 
