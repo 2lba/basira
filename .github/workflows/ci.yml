@@ -54,7 +54,7 @@ jobs:
           python-version: "3.13"
 
       - name: cache pip
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('backend/pyproject.toml') }}
@@ -124,7 +124,7 @@ jobs:
           node-version: "22"
 
       - name: cache npm
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: frontend/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('frontend/package.json') }}
