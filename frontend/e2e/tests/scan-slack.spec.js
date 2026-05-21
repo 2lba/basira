@@ -57,7 +57,7 @@ test.describe("slack webhook", () => {
 
   test("clearing the webhook also disables notifications", async ({
     page,
-    request,
+    request: _request,
     seeded: _seeded,
   }) => {
     const sinkUrl = `${BACKEND_INTERNAL}/test/webhook-sink/slack`;

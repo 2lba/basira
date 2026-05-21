@@ -42,7 +42,7 @@ test.describe("compare two scans", () => {
     // score delta visible (most recent on top, so A is the second/latest run)
     const delta = page.getByTestId("score-delta");
     await expect(delta).toBeVisible();
-    await expect(delta).toContainText(/^[+\-]?\d+$/);
+    await expect(delta).toContainText(/^[+-]?\d+$/);
 
     // sections render with counts that reflect the stub findings
     const resolved = page.getByTestId("resolved-section");

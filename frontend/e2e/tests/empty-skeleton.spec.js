@@ -1,8 +1,6 @@
 // @ts-check
 import { test, expect } from "./fixtures.js";
 
-const API_BASE = process.env.E2E_API_BASE || "http://localhost:8001";
-
 test.describe("empty states + skeletons", () => {
   test("scans index empty state offers a way back to repos", async ({
     page,

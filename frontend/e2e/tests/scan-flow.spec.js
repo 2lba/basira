@@ -101,7 +101,7 @@ test.describe("scan repository flow", () => {
 
   test("scan history shows previous scans across visits", async ({
     page,
-    request,
+    request: _request,
     seeded,
   }) => {
     // run two scans by triggering, waiting, then triggering again

@@ -7,7 +7,9 @@ test.describe("onboarding tour", () => {
     await page.addInitScript(() => {
       try {
         window.localStorage.removeItem("basira_tour_completed");
-      } catch {}
+      } catch {
+        /* localStorage may be unavailable */
+      }
     });
   });
 
@@ -58,7 +60,9 @@ test.describe("onboarding tour", () => {
     await page.addInitScript(() => {
       try {
         window.localStorage.setItem("basira_tour_completed", "1");
-      } catch {}
+      } catch {
+        /* localStorage may be unavailable */
+      }
     });
     await page.goto("/");
     await expect(page.getByTestId("onboarding-tour")).toHaveCount(0);
