@@ -11,11 +11,11 @@ from app.api.routes.auth import router as auth_router
 from app.api.routes.findings import router as findings_router
 from app.api.routes.health import router as health_router
 from app.api.routes.me import router as me_router
-from app.api.routes.user_api_keys import router as user_api_keys_router
 from app.api.routes.repos import router as repos_router
 from app.api.routes.reviews import router as reviews_router
 from app.api.routes.scans import public_router as share_router
 from app.api.routes.scans import router as scans_router
+from app.api.routes.user_api_keys import router as user_api_keys_router
 from app.api.routes.webhooks import router as webhook_router
 from app.config import get_settings
 from app.core.errors import (

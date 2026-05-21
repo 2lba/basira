@@ -6,7 +6,6 @@ be brute-forced against Anthropic by hammering /test.
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_settings
 from app.core.auth_deps import current_user
 from app.core.crypto import CryptoError
 from app.core.errors import AppError

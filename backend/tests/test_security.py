@@ -319,8 +319,9 @@ async def test_byok_mass_assignment_ignores_extra_fields(client, db):
     """The PUT schema only declares api_key. Anything else (provider,
     is_valid, user_id) must be silently dropped by pydantic, never used
     to upsert as someone else."""
-    from app.models.user_api_key import UserApiKey
     from sqlalchemy import select
+
+    from app.models.user_api_key import UserApiKey
 
     user_a, _ = await _seed_user_with_repo(db, "alice", 1001)
     user_b, _ = await _seed_user_with_repo(db, "bob", 2002)

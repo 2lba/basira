@@ -14,13 +14,10 @@ import hashlib
 import hmac
 import json
 
-import pytest
-
 from app.config import get_settings
 from app.integrations.github_oauth import (
     GithubOAuthError,
     GithubProfile,
-    OAuthRepo,
     _noreply_email,
 )
 
@@ -226,7 +223,7 @@ async def test_email_403_falls_back_to_noreply_and_login_succeeds(
 
 async def test_user_repos_403_does_not_block_login(client, db, monkeypatch):
     """GitHub Apps don't honor the OAuth `repo` scope; /user/repos comes
-    back 403 for many installs. That must not break the login path  - 
+    back 403 for many installs. That must not break the login path  -
     the user simply gets an empty repo list until they install the App."""
     _configure_oauth(monkeypatch)
     _stub_github(
