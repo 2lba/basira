@@ -2,8 +2,7 @@ from textwrap import dedent
 
 from app.services.chunker import Chunk, FilePiece
 
-SYSTEM_PROMPT = dedent(
-    """\
+SYSTEM_PROMPT = dedent("""\
     You are a senior software engineer doing a code review on a GitHub pull
     request. You read diffs carefully and respond with specific, actionable
     feedback. You do not hedge. You do not pad with praise.
@@ -39,8 +38,7 @@ SYSTEM_PROMPT = dedent(
       ],
       "summary": "one short paragraph or empty string"
     }
-    """
-).strip()
+    """).strip()
 
 
 _EXAMPLE_1_OUTPUT = (
@@ -54,8 +52,7 @@ _EXAMPLE_1_OUTPUT = (
 )
 
 FEW_SHOT_EXAMPLES = (
-    dedent(
-        """\
+    dedent("""\
         Example diff:
         --- file: app/auth.py ---
         @@ -10,3 +10,7 @@
@@ -65,13 +62,11 @@ FEW_SHOT_EXAMPLES = (
              return False
 
         Example output:
-        """
-    ).strip()
+        """).strip()
     + "\n"
     + _EXAMPLE_1_OUTPUT
     + "\n\n"
-    + dedent(
-        """\
+    + dedent("""\
         Example diff:
         --- file: util/math.py ---
         @@ -1,2 +1,2 @@
@@ -80,8 +75,7 @@ FEW_SHOT_EXAMPLES = (
 
         Example output:
         {"findings":[],"summary":""}
-        """
-    ).strip()
+        """).strip()
 )
 
 
@@ -104,8 +98,7 @@ def build_user_prompt(
         if custom_rules and custom_rules.strip()
         else ""
     )
-    return dedent(
-        f"""\
+    return dedent(f"""\
         Review this slice of pull request #{pr_number} on {repo_full_name}.
 
         {FEW_SHOT_EXAMPLES}
@@ -115,8 +108,7 @@ def build_user_prompt(
         {body}
 
         Return only the JSON object. No prose around it.
-        """
-    ).strip()
+        """).strip()
 
 
 def validate_finding(item: dict) -> dict | None:

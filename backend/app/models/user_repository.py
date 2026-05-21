@@ -27,7 +27,8 @@ class UserRepository(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
 
     __table_args__ = (
         UniqueConstraint(
-            "user_id", "repository_id",
+            "user_id",
+            "repository_id",
             name="uq_user_repositories_pair",
         ),
         Index("idx_user_repositories_user_id", "user_id"),

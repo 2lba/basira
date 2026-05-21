@@ -66,9 +66,7 @@ async def _installation_user(
     return (await db.execute(stmt)).scalar_one_or_none()
 
 
-async def run_due_scheduled_scans(
-    db: AsyncSession, now: datetime | None = None
-) -> list[str]:
+async def run_due_scheduled_scans(db: AsyncSession, now: datetime | None = None) -> list[str]:
     """Look at every repo with a schedule_kind != 'none' and enqueue a scan for
     each one whose schedule matches `now`. Returns the list of scan ids that
     were created."""

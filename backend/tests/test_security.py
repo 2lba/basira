@@ -162,9 +162,7 @@ async def test_tampered_jwt_payload_is_rejected(client, db):
     payload = json.loads(payload_raw)
     payload["sub"] = str(user_a.id)
     payload["login"] = "alice"
-    bad_payload_b64 = (
-        base64.urlsafe_b64encode(json.dumps(payload).encode()).rstrip(b"=").decode()
-    )
+    bad_payload_b64 = base64.urlsafe_b64encode(json.dumps(payload).encode()).rstrip(b"=").decode()
     forged = f"{header_b64}.{bad_payload_b64}.{sig_b64}"
 
     client.cookies.update({"basira_access": forged})
@@ -371,6 +369,7 @@ async def test_byok_api_key_not_in_error_response_or_logs(client, db, caplog):
     secret = "sk-ant-this-must-not-be-logged-XXXX"
 
     import logging
+
     with caplog.at_level(logging.DEBUG):
         r = await client.put(
             "/api/me/api-keys/anthropic",

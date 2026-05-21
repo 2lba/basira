@@ -47,16 +47,49 @@ def make_dedup_key(path: str, line: int | None, severity: str, category: str, me
     msg_hash = hashlib.sha256(message.strip().encode("utf-8")).hexdigest()[:16]
     return f"{path}|{line or 0}|{severity}|{category}|{msg_hash}"
 
+
 # code extensions Claude reviews well; everything else is skipped
 ALLOWED_EXTENSIONS = {
-    ".py", ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs",
-    ".go", ".rs", ".java", ".kt", ".scala", ".rb", ".php",
-    ".c", ".h", ".cc", ".cpp", ".hpp", ".cs", ".swift", ".m", ".mm",
-    ".sh", ".bash", ".zsh",
+    ".py",
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".mjs",
+    ".cjs",
+    ".go",
+    ".rs",
+    ".java",
+    ".kt",
+    ".scala",
+    ".rb",
+    ".php",
+    ".c",
+    ".h",
+    ".cc",
+    ".cpp",
+    ".hpp",
+    ".cs",
+    ".swift",
+    ".m",
+    ".mm",
+    ".sh",
+    ".bash",
+    ".zsh",
     ".sql",
-    ".html", ".css", ".scss", ".sass", ".vue", ".svelte",
-    ".yaml", ".yml", ".toml", ".json",
-    ".dockerfile", ".tf", ".hcl",
+    ".html",
+    ".css",
+    ".scss",
+    ".sass",
+    ".vue",
+    ".svelte",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".json",
+    ".dockerfile",
+    ".tf",
+    ".hcl",
     ".md",
 }
 
@@ -190,9 +223,7 @@ async def _call_claude_for_chunk(
     user = build_scan_user_prompt(
         [(f.path, f.content) for f in chunk.files], repo_full_name, custom_rules
     )
-    response = await call_claude(
-        system=SCAN_SYSTEM_PROMPT, user=user, model=model, api_key=api_key
-    )
+    response = await call_claude(system=SCAN_SYSTEM_PROMPT, user=user, model=model, api_key=api_key)
     try:
         data = parse_json_strict(response.text)
     except AnthropicError:
@@ -214,9 +245,7 @@ async def _call_claude_for_chunk(
     return cleaned, response.input_tokens, response.output_tokens
 
 
-async def _set_progress(
-    db: AsyncSession, scan: Scan, progress: int, message: str
-) -> None:
+async def _set_progress(db: AsyncSession, scan: Scan, progress: int, message: str) -> None:
     scan.progress = max(0, min(100, progress))
     scan.progress_message = message[:255] if message else None
     await db.commit()
@@ -245,9 +274,7 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
             inst_for_owner = await find_installation_for_repo(db, repo.id)
             if inst_for_owner is not None:
                 owner_id = inst_for_owner.user_id
-        if owner_id is not None and not await get_user_anthropic_key(
-            db, owner_id
-        ):
+        if owner_id is not None and not await get_user_anthropic_key(db, owner_id):
             scan.status = "failed"
             scan.error = "MISSING_API_KEY: add your Anthropic API key in Settings"
             scan.finished_at = datetime.now(UTC)
@@ -293,9 +320,7 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
             head_sha = await client.get_branch_sha(repo.owner, repo.name, branch)
         except GithubApiError as e:
             if repo.default_branch and branch != repo.default_branch:
-                head_sha = await client.get_branch_sha(
-                    repo.owner, repo.name, repo.default_branch
-                )
+                head_sha = await client.get_branch_sha(repo.owner, repo.name, repo.default_branch)
                 branch = repo.default_branch
             else:
                 raise e
@@ -346,11 +371,12 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
 
         for idx, chunk in enumerate(chunks, start=1):
             pct = 45 + int(50 * idx / max(1, len(chunks)))
-            await _set_progress(
-                db, scan, pct, f"reviewing chunk {idx}/{len(chunks)}"
-            )
+            await _set_progress(db, scan, pct, f"reviewing chunk {idx}/{len(chunks)}")
             findings, t_in, t_out = await _call_claude_for_chunk(
-                chunk, repo.full_name, repo.custom_rules, model,
+                chunk,
+                repo.full_name,
+                repo.custom_rules,
+                model,
                 api_key=user_anthropic_key,
             )
             all_findings.extend(findings)
@@ -375,9 +401,7 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
         for c in capped:
             if c["category"] in ignored_cats:
                 continue
-            key = make_dedup_key(
-                c["file"], c["line"], c["severity"], c["category"], c["message"]
-            )
+            key = make_dedup_key(c["file"], c["line"], c["severity"], c["category"], c["message"])
             if key in fp_keys:
                 continue
             db.add(
@@ -422,9 +446,7 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
         raise
 
 
-async def _run_scan_e2e_stub(
-    db: AsyncSession, scan: Scan, repo: Repository
-) -> ScanOutcome:
+async def _run_scan_e2e_stub(db: AsyncSession, scan: Scan, repo: Repository) -> ScanOutcome:
     """Deterministic scan path for end-to-end tests. Steps through progress so
     the UI can render the progress bar, then emits canned findings. Subsequent
     scans for the same repo drop a nit and add a new minor so the compare view
@@ -519,9 +541,7 @@ async def _run_scan_e2e_stub(
     for f in findings:
         if f["category"] in ignored_cats:
             continue
-        key = make_dedup_key(
-            f["path"], f["line"], f["severity"], f["category"], f["message"]
-        )
+        key = make_dedup_key(f["path"], f["line"], f["severity"], f["category"], f["message"])
         if key in fp_keys:
             continue
         kept_findings.append(f)

@@ -4,6 +4,7 @@ These endpoints let a Playwright test seed a user/repo/installation directly
 without going through real OAuth or GitHub App flows. They are not registered
 in production builds.
 """
+
 import json
 import secrets
 
@@ -275,8 +276,10 @@ async def finalize_now(scan_id: str, db: AsyncSession = Depends(get_db)):
 
     # remove any pre-existing findings for idempotency
     existing = (
-        await db.execute(select(ScanFinding).where(ScanFinding.scan_id == scan.id))
-    ).scalars().all()
+        (await db.execute(select(ScanFinding).where(ScanFinding.scan_id == scan.id)))
+        .scalars()
+        .all()
+    )
     for ef in existing:
         await db.delete(ef)
 

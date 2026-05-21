@@ -116,9 +116,7 @@ async def clear_last_e2e_email() -> None:
         await r.aclose()
 
 
-async def notify_scan_finished(
-    scan: Scan, repo: Repository, user: User | None
-) -> dict | None:
+async def notify_scan_finished(scan: Scan, repo: Repository, user: User | None) -> dict | None:
     """Send a scan-finished email if the user has SMTP configured and
     notifications enabled. Returns the payload that was sent (or None if
     notification was skipped). In e2e mode the payload is stashed in Redis
@@ -201,12 +199,8 @@ def _severity_summary(counts: dict | None) -> str:
     return ", ".join(parts)
 
 
-def _build_slack_payload(
-    scan: Scan, repo: Repository, frontend_url: str
-) -> dict:
-    score_line = (
-        f"*Score:* {scan.score}/100" if scan.score is not None else "*Score:*  - "
-    )
+def _build_slack_payload(scan: Scan, repo: Repository, frontend_url: str) -> dict:
+    score_line = f"*Score:* {scan.score}/100" if scan.score is not None else "*Score:*  - "
     summary = _severity_summary(scan.counts)
     fe = frontend_url.rstrip("/")
     report_url = f"{fe}/scans/{scan.id}"
@@ -214,9 +208,7 @@ def _build_slack_payload(
     status_emoji = {"succeeded": ":white_check_mark:", "failed": ":x:"}.get(
         scan.status, ":hourglass_flowing_sand:"
     )
-    text = (
-        f"{status_emoji} *Basira scan {scan.status}* - `{repo.full_name}`"
-    )
+    text = f"{status_emoji} *Basira scan {scan.status}* - `{repo.full_name}`"
     sections: list[str] = [score_line, f"*Findings:* {summary}"]
     if scan.ref:
         sections.append(f"*Branch:* `{scan.ref}`")
@@ -251,9 +243,7 @@ def _discord_color(scan: Scan) -> int:
     return 0xEF4444
 
 
-def _build_discord_payload(
-    scan: Scan, repo: Repository, frontend_url: str
-) -> dict:
+def _build_discord_payload(scan: Scan, repo: Repository, frontend_url: str) -> dict:
     fe = frontend_url.rstrip("/")
     report_url = f"{fe}/scans/{scan.id}"
     share_url = _share_url(scan, frontend_url)
@@ -283,13 +273,9 @@ def _build_discord_payload(
     if scan.ref:
         fields.append({"name": "Branch", "value": scan.ref, "inline": True})
     if scan.head_sha:
-        fields.append(
-            {"name": "Commit", "value": scan.head_sha[:7], "inline": True}
-        )
+        fields.append({"name": "Commit", "value": scan.head_sha[:7], "inline": True})
     if share_url:
-        fields.append(
-            {"name": "Public link", "value": share_url, "inline": False}
-        )
+        fields.append({"name": "Public link", "value": share_url, "inline": False})
 
     embed = {
         "title": f"Basira scan: {repo.full_name}",
@@ -336,9 +322,7 @@ async def notify_slack(scan: Scan, repo: Repository, user: User | None) -> dict 
     return payload
 
 
-async def notify_discord(
-    scan: Scan, repo: Repository, user: User | None
-) -> dict | None:
+async def notify_discord(scan: Scan, repo: Repository, user: User | None) -> dict | None:
     if user is None or not user.notify_discord_enabled:
         return None
     if not user.discord_webhook_url_encrypted:
@@ -368,11 +352,7 @@ async def notify_by_scan_id(db_factory, scan_id: uuid.UUID) -> None:
         repo = await db.get(Repository, scan.repository_id)
         if repo is None:
             return
-        user = (
-            await db.get(User, scan.triggered_by_user_id)
-            if scan.triggered_by_user_id
-            else None
-        )
+        user = await db.get(User, scan.triggered_by_user_id) if scan.triggered_by_user_id else None
         await notify_scan_finished(scan, repo, user)
         await notify_slack(scan, repo, user)
         await notify_discord(scan, repo, user)

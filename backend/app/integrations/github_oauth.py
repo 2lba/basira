@@ -143,9 +143,7 @@ class OAuthRepo:
     private: bool
 
 
-async def list_user_repos(
-    access_token: str, max_pages: int = 10
-) -> list[OAuthRepo]:
+async def list_user_repos(access_token: str, max_pages: int = 10) -> list[OAuthRepo]:
     """Paginate /user/repos with the user's OAuth token. Caps at
     100*max_pages results to keep first-login latency bounded."""
     headers = {
@@ -167,9 +165,7 @@ async def list_user_repos(
                 },
             )
             if r.status_code != 200:
-                raise GithubOAuthError(
-                    f"github /user/repos failed: {r.status_code}"
-                )
+                raise GithubOAuthError(f"github /user/repos failed: {r.status_code}")
             items = r.json()
             if not isinstance(items, list) or not items:
                 break

@@ -65,9 +65,7 @@ class ScanFinding(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     message: Mapped[str] = mapped_column(Text, nullable=False)
     suggestion: Mapped[str | None] = mapped_column(Text, nullable=True)
     confidence: Mapped[float | None] = mapped_column(Numeric(4, 3), nullable=True)
-    resolved_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     false_positive_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

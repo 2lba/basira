@@ -195,19 +195,27 @@ async def compare_scans(
         raise AppError("SCAN_NOT_FOUND", "scan not found", status.HTTP_404_NOT_FOUND)
 
     f_a = (
-        await db.execute(
-            select(ScanFinding).where(
-                ScanFinding.scan_id == scan_a.id, ScanFinding.deleted_at.is_(None)
+        (
+            await db.execute(
+                select(ScanFinding).where(
+                    ScanFinding.scan_id == scan_a.id, ScanFinding.deleted_at.is_(None)
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     f_b = (
-        await db.execute(
-            select(ScanFinding).where(
-                ScanFinding.scan_id == scan_b.id, ScanFinding.deleted_at.is_(None)
+        (
+            await db.execute(
+                select(ScanFinding).where(
+                    ScanFinding.scan_id == scan_b.id, ScanFinding.deleted_at.is_(None)
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     def key(f: ScanFinding) -> tuple:
         return (f.path, f.line, f.severity, f.category, f.message)

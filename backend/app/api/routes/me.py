@@ -129,9 +129,7 @@ async def update_smtp(
                 status.HTTP_503_SERVICE_UNAVAILABLE,
             ) from e
     if body.notify_email_enabled is not None:
-        if body.notify_email_enabled and not (
-            user.smtp_host and user.smtp_port and user.smtp_from
-        ):
+        if body.notify_email_enabled and not (user.smtp_host and user.smtp_port and user.smtp_from):
             raise AppError(
                 "SMTP_INCOMPLETE",
                 "configure smtp host, port and from before enabling notifications",
@@ -186,9 +184,7 @@ async def update_slack(
 
 @router.get("/discord", response_model=ChatWebhookOut)
 async def get_discord(user: User = Depends(current_user)):
-    return _chat_to_out(
-        user.discord_webhook_url_encrypted, user.notify_discord_enabled
-    )
+    return _chat_to_out(user.discord_webhook_url_encrypted, user.notify_discord_enabled)
 
 
 @router.patch("/discord", response_model=ChatWebhookOut)
@@ -219,6 +215,4 @@ async def update_discord(
 
     await db.commit()
     await db.refresh(user)
-    return _chat_to_out(
-        user.discord_webhook_url_encrypted, user.notify_discord_enabled
-    )
+    return _chat_to_out(user.discord_webhook_url_encrypted, user.notify_discord_enabled)

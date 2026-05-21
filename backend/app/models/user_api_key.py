@@ -33,7 +33,8 @@ class UserApiKey(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
 
     __table_args__ = (
         UniqueConstraint(
-            "user_id", "provider",
+            "user_id",
+            "provider",
             name="uq_user_api_keys_user_provider",
         ),
         Index("idx_user_api_keys_user_id", "user_id"),

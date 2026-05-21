@@ -19,19 +19,11 @@ class User(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     smtp_password_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
     smtp_from: Mapped[str | None] = mapped_column(String(320), nullable=True)
     smtp_use_tls: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    notify_email_enabled: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
-    )
+    notify_email_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     slack_webhook_url_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
-    notify_slack_enabled: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
-    )
-    discord_webhook_url_encrypted: Mapped[str | None] = mapped_column(
-        Text, nullable=True
-    )
-    notify_discord_enabled: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
-    )
+    notify_slack_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    discord_webhook_url_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    notify_discord_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     __table_args__ = (Index("idx_users_github_login", "github_login"),)

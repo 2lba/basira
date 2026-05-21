@@ -5,6 +5,7 @@ for the scan engine.
 The plain key never leaves this module. Callers see a `UserApiKey` row
 with `key_last_four` and never the encrypted payload.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -123,9 +124,7 @@ async def upsert_user_api_key(
     return row
 
 
-async def delete_user_api_key(
-    db: AsyncSession, user_id: uuid.UUID, provider: str
-) -> bool:
+async def delete_user_api_key(db: AsyncSession, user_id: uuid.UUID, provider: str) -> bool:
     stmt = select(UserApiKey).where(
         UserApiKey.user_id == user_id,
         UserApiKey.provider == provider,
@@ -151,9 +150,7 @@ async def get_user_api_key_row(
     return (await db.execute(stmt)).scalar_one_or_none()
 
 
-async def get_user_anthropic_key(
-    db: AsyncSession, user_id: uuid.UUID
-) -> str | None:
+async def get_user_anthropic_key(db: AsyncSession, user_id: uuid.UUID) -> str | None:
     """Decrypt and return the user's Anthropic API key, or None if they
     don't have one configured. Callers should treat None as a signal to
     fail the scan with MISSING_API_KEY."""

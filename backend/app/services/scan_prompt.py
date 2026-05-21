@@ -1,7 +1,6 @@
 from textwrap import dedent
 
-SCAN_SYSTEM_PROMPT = dedent(
-    """\
+SCAN_SYSTEM_PROMPT = dedent("""\
     You are a senior software engineer auditing a repository's source code. You
     read files carefully and respond with specific, actionable feedback. You do
     not hedge. You do not pad with praise.
@@ -33,8 +32,7 @@ SCAN_SYSTEM_PROMPT = dedent(
         }
       ]
     }
-    """
-).strip()
+    """).strip()
 
 
 def _format_file(path: str, content: str) -> str:
@@ -52,8 +50,7 @@ def build_scan_user_prompt(
         if custom_rules and custom_rules.strip()
         else ""
     )
-    return dedent(
-        f"""\
+    return dedent(f"""\
         Audit the following files from {repo_full_name}.{rules}
 
         Lines are pre-numbered for citation. Use those numbers in the "line" field.
@@ -61,8 +58,7 @@ def build_scan_user_prompt(
         {body}
 
         Return only the JSON object.
-        """
-    ).strip()
+        """).strip()
 
 
 def validate_finding(item: dict) -> dict | None:

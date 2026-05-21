@@ -3,6 +3,7 @@
 The real upstream call to Anthropic is monkeypatched at the import seam
 in `app.api.routes.user_api_keys` so tests never burn real API tokens.
 """
+
 import pytest
 
 from app.core.crypto import issue_access_token
@@ -38,14 +39,10 @@ def _patch_validator(monkeypatch, *, valid: bool, error: str | None = None) -> N
     async def fake_validate(api_key: str) -> ValidationResult:
         return ValidationResult(valid=valid, error=error)
 
-    monkeypatch.setattr(
-        "app.api.routes.user_api_keys.validate_anthropic_key", fake_validate
-    )
+    monkeypatch.setattr("app.api.routes.user_api_keys.validate_anthropic_key", fake_validate)
 
 
-async def test_put_valid_key_returns_200_with_last_four(
-    client, db, monkeypatch, alice
-):
+async def test_put_valid_key_returns_200_with_last_four(client, db, monkeypatch, alice):
     _patch_validator(monkeypatch, valid=True)
     _auth(client, alice)
     r = await client.put(
@@ -127,16 +124,12 @@ async def test_get_user_anthropic_key_roundtrip(db, monkeypatch, alice):
     assert decrypted == raw
 
 
-async def test_full_key_never_appears_in_any_response(
-    client, db, monkeypatch, alice
-):
+async def test_full_key_never_appears_in_any_response(client, db, monkeypatch, alice):
     """Defense in depth: even by mistake we must not echo the plaintext."""
     _patch_validator(monkeypatch, valid=True)
     _auth(client, alice)
     secret = "sk-ant-very-secret-do-not-leak-12345"
-    put_r = await client.put(
-        "/api/me/api-keys/anthropic", json={"api_key": secret}
-    )
+    put_r = await client.put("/api/me/api-keys/anthropic", json={"api_key": secret})
     list_r = await client.get("/api/me/api-keys")
     for r in (put_r, list_r):
         assert secret not in r.text, "plaintext key leaked in response body"
@@ -153,9 +146,7 @@ async def test_post_test_endpoint_valid_key(client, db, monkeypatch, alice):
     async def fake_revalidate(db_, user_id, provider):
         return ValidationResult(True, None)
 
-    monkeypatch.setattr(
-        "app.api.routes.user_api_keys.revalidate_user_api_key", fake_revalidate
-    )
+    monkeypatch.setattr("app.api.routes.user_api_keys.revalidate_user_api_key", fake_revalidate)
     r = await client.post("/api/me/api-keys/anthropic/test")
     assert r.status_code == 200
     assert r.json()["valid"] is True
@@ -172,9 +163,7 @@ async def test_post_test_endpoint_invalid_key(client, db, monkeypatch, alice):
     async def fake_revalidate(db_, user_id, provider):
         return ValidationResult(False, "key was revoked")
 
-    monkeypatch.setattr(
-        "app.api.routes.user_api_keys.revalidate_user_api_key", fake_revalidate
-    )
+    monkeypatch.setattr("app.api.routes.user_api_keys.revalidate_user_api_key", fake_revalidate)
     r = await client.post("/api/me/api-keys/anthropic/test")
     assert r.status_code == 200
     body = r.json()

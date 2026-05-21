@@ -49,24 +49,16 @@ def _stub_github(
             if emails_403:
                 email = _noreply_email(user_id, login)
             # otherwise fetch_profile's real fallback would have set noreply too
-        return GithubProfile(
-            id=user_id, login=login, email=email, avatar_url=None
-        )
+        return GithubProfile(id=user_id, login=login, email=email, avatar_url=None)
 
     async def fake_list_user_repos(token, max_pages=10):
         if repos_403:
             raise GithubOAuthError("github /user/repos failed: 403")
         return []  # most installs have no OAuth-visible repos
 
-    monkeypatch.setattr(
-        "app.api.routes.auth.exchange_code", fake_exchange_code
-    )
-    monkeypatch.setattr(
-        "app.api.routes.auth.fetch_profile", fake_fetch_profile
-    )
-    monkeypatch.setattr(
-        "app.api.routes.auth.list_user_repos", fake_list_user_repos
-    )
+    monkeypatch.setattr("app.api.routes.auth.exchange_code", fake_exchange_code)
+    monkeypatch.setattr("app.api.routes.auth.fetch_profile", fake_fetch_profile)
+    monkeypatch.setattr("app.api.routes.auth.list_user_repos", fake_list_user_repos)
 
 
 async def _start_login(client) -> str:
@@ -198,9 +190,7 @@ async def test_oauth_user_denial_redirects(client):
     assert "oauth_error=OAUTH_DENIED" in r.headers["location"]
 
 
-async def test_email_403_falls_back_to_noreply_and_login_succeeds(
-    client, db, monkeypatch
-):
+async def test_email_403_falls_back_to_noreply_and_login_succeeds(client, db, monkeypatch):
     """The original 'OAuth callback when email is private' bug. Now an
     end-to-end check that the full flow completes when GitHub returns
     403 on /user/emails and the /user payload has no email field."""

@@ -3,6 +3,7 @@
 PUT/POST routes are rate-limited 10/min per IP so a leaked password can't
 be brute-forced against Anthropic by hammering /test.
 """
+
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
