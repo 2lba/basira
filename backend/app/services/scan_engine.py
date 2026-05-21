@@ -263,7 +263,7 @@ async def run_scan(db: AsyncSession, scan_id: uuid.UUID) -> ScanOutcome:
         await db.commit()
         raise ValueError("no installation")
 
-    # BYOK — fetch the user's Anthropic key BEFORE we touch GitHub. Fail
+    # BYOK - fetch the user's Anthropic key BEFORE we touch GitHub. Fail
     # fast with a clear, user-facing error so the user knows what to fix.
     from app.services.user_api_key import get_user_anthropic_key
 

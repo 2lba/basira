@@ -39,7 +39,7 @@ export function ScoreCircle({ score, size = 96 }) {
         />
       </svg>
       <div className={`absolute inset-0 flex items-center justify-center ${tone}`}>
-        <span className="text-xl font-semibold">{s == null ? "—" : s}</span>
+        <span className="text-xl font-semibold">{s == null ? " - " : s}</span>
       </div>
     </div>
   );

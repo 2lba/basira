@@ -37,7 +37,7 @@ export default function ReviewDetail() {
 
       <div className="mt-6 card">
         <h2 className="text-sm uppercase tracking-wider text-fg-muted">summary</h2>
-        <p className="mt-2 text-fg leading-relaxed">{r.summary || "—"}</p>
+        <p className="mt-2 text-fg leading-relaxed">{r.summary || " - "}</p>
         {r.error && (
           <p className="mt-3 text-danger text-sm font-mono">{r.error}</p>
         )}
@@ -48,12 +48,12 @@ export default function ReviewDetail() {
             value={
               r.tokens_input != null
                 ? `${r.tokens_input} in / ${r.tokens_output ?? 0} out`
-                : "—"
+                : " - "
             }
           />
           <Stat
             label="cost"
-            value={r.cost_usd != null ? `$${r.cost_usd.toFixed(4)}` : "—"}
+            value={r.cost_usd != null ? `$${r.cost_usd.toFixed(4)}` : " - "}
           />
         </dl>
       </div>

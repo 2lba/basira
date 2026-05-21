@@ -130,7 +130,7 @@ function ConfiguredState({ row, onUpdate, onTest, onRemove, busy }) {
             data-testid="key-status-invalid"
             className="text-xs font-mono px-2 py-0.5 rounded border border-danger/30 bg-danger/10 text-danger"
           >
-            invalid — re-test or replace
+            invalid - re-test or replace
           </span>
         )}
       </div>
@@ -202,7 +202,7 @@ function AddKeyModal({ onClose, onSaved }) {
       await putAnthropicKey(value.trim());
       await onSaved();
     } catch (e) {
-      // expose the backend's INVALID_API_KEY message verbatim — it's
+      // expose the backend's INVALID_API_KEY message verbatim - it's
       // already user-readable ("anthropic rejected this key", etc.)
       setError(e.message || "could not save key");
     } finally {

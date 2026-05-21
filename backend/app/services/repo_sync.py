@@ -70,7 +70,7 @@ async def sync_user_repos(
         if repo is not None:
             repo.connected = rid in connected_set
 
-    # user_repositories link table — one row per (user, repo)
+    # user_repositories link table - one row per (user, repo)
     existing_links = (
         await db.execute(
             select(UserRepository.repository_id).where(

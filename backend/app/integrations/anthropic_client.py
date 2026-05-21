@@ -33,7 +33,7 @@ _client: AsyncAnthropic | None = None
 
 def _get_client(api_key: str | None = None) -> AsyncAnthropic:
     """Return an Anthropic client. If `api_key` is passed (BYOK), build a
-    fresh client for that key — we don't cache per-user clients because the
+    fresh client for that key - we don't cache per-user clients because the
     hot path is one scan per process so cache misses are cheap and a global
     map would grow unbounded across users. Falls back to the env key only
     if no per-user key is provided (admin/testing path)."""

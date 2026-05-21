@@ -44,11 +44,11 @@ Out of scope:
 - Self-XSS on a victim's own machine
 - Findings produced by Claude that turn out to be wrong (those are model
   quality issues, file them as regular bugs)
-- Anything in third-party services we depend on (GitHub, Anthropic) —
+- Anything in third-party services we depend on (GitHub, Anthropic)  - 
   please report those upstream
 
 ## What we've already audited
 
 See `docs/security/threat-model.md` and `docs/security/owasp-audit.md` for
 the current threat model and OWASP 2021 coverage. If your finding overlaps
-with a known item documented there, that's fine — we'd still rather know.
+with a known item documented there, that's fine - we'd still rather know.

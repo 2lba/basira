@@ -45,15 +45,15 @@ github → webhook → backend → arq → worker → claude → github
 
 ## what we don't model
 
-- multi-tenant orgs — single owner per deployment for v0.1
+- multi-tenant orgs - single owner per deployment for v0.1
 - chat replies on review threads
 - per-PR token budget overrides
 - streaming responses from Claude
 
 ## directories you'll touch most
 
-- `app/services/review_engine.py` — the orchestration
-- `app/services/prompt.py` — the prompt
-- `app/services/chunker.py` — how diffs are sliced
-- `app/integrations/github_api.py` — REST calls
-- `app/api/routes/webhooks.py` — entry point
+- `app/services/review_engine.py` - the orchestration
+- `app/services/prompt.py` - the prompt
+- `app/services/chunker.py` - how diffs are sliced
+- `app/integrations/github_api.py` - REST calls
+- `app/api/routes/webhooks.py` - entry point

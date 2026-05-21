@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 
 // Proxy backend paths through the same origin as the frontend so OAuth
 // session cookies don't get split between origins. Patterns must be
-// regex-strict — Vite's plain-string prefix match would otherwise catch
+// regex-strict - Vite's plain-string prefix match would otherwise catch
 // the /shared/:token SPA route ("/share" is a prefix of "/shared").
 const BACKEND = process.env.VITE_BACKEND_INTERNAL_URL || "http://backend:8000";
 const PROXY_PATTERNS = [

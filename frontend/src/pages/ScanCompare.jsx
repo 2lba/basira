@@ -62,7 +62,7 @@ export default function ScanCompare() {
           </div>
           <div className={`text-3xl font-semibold mt-1 ${deltaTone}`} data-testid="score-delta">
             {score_delta == null
-              ? "—"
+              ? " - "
               : score_delta > 0
                 ? `+${score_delta}`
                 : `${score_delta}`}
@@ -113,7 +113,7 @@ function ScanSummary({ scan, label }) {
           {label}
         </div>
         <div className="text-fg text-sm font-mono mt-0.5">
-          {scan.head_sha ? scan.head_sha.slice(0, 7) : "—"}
+          {scan.head_sha ? scan.head_sha.slice(0, 7) : " - "}
         </div>
         <div className="text-fg-muted text-xs mt-0.5">
           {new Date(scan.created_at).toLocaleString()}
@@ -130,7 +130,7 @@ function DeltaChip({ label, delta }) {
       : delta > 0
         ? "text-danger border-danger/30"
         : "text-success border-success/30";
-  const sign = delta == null ? "—" : delta > 0 ? `+${delta}` : `${delta}`;
+  const sign = delta == null ? " - " : delta > 0 ? `+${delta}` : `${delta}`;
   return (
     <div className={`card flex items-center justify-between border ${tone}`}>
       <span className="text-xs uppercase tracking-wider">{label}</span>

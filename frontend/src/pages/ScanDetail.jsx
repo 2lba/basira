@@ -300,15 +300,15 @@ function ReportPanel({
         <div className="flex-1">
           <h2 className="text-sm uppercase tracking-wider text-fg-muted">summary</h2>
           <p className="mt-2 text-fg leading-relaxed" data-testid="scan-summary">
-            {scan.summary || "—"}
+            {scan.summary || " - "}
           </p>
           <dl className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
             <Stat label="status" value={scan.status} />
-            <Stat label="files" value={scan.files_scanned ?? "—"} />
-            <Stat label="model" value={scan.model || "—"} />
+            <Stat label="files" value={scan.files_scanned ?? " - "} />
+            <Stat label="model" value={scan.model || " - "} />
             <Stat
               label="cost"
-              value={scan.cost_usd != null ? `$${scan.cost_usd.toFixed(4)}` : "—"}
+              value={scan.cost_usd != null ? `$${scan.cost_usd.toFixed(4)}` : " - "}
             />
           </dl>
         </div>

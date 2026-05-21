@@ -44,13 +44,13 @@ All authenticated endpoints expect the `basira_access` cookie set by the login f
 
 ## error codes you'll see
 
-- `NOT_AUTHENTICATED` — no session cookie
-- `INVALID_TOKEN` — JWT bad or expired
-- `OAUTH_STATE_MISMATCH` — CSRF state didn't match
-- `OAUTH_DENIED` — user clicked "cancel" on GitHub
-- `REFRESH_REUSED` — single-use refresh token was reused; session revoked
-- `INVALID_WEBHOOK_SIGNATURE` — HMAC mismatch
-- `WEBHOOK_PROCESS_FAILED` — handler couldn't make sense of the payload
-- `REPO_NOT_FOUND` / `REVIEW_NOT_FOUND` — also returned when the user is not allowed to see the resource (don't leak existence)
-- `BAD_SEVERITY`, `BAD_MODEL` — validation on PATCH /api/repos
-- `RATE_LIMITED` — too many failed auth attempts from this IP
+- `NOT_AUTHENTICATED` - no session cookie
+- `INVALID_TOKEN` - JWT bad or expired
+- `OAUTH_STATE_MISMATCH` - CSRF state didn't match
+- `OAUTH_DENIED` - user clicked "cancel" on GitHub
+- `REFRESH_REUSED` - single-use refresh token was reused; session revoked
+- `INVALID_WEBHOOK_SIGNATURE` - HMAC mismatch
+- `WEBHOOK_PROCESS_FAILED` - handler couldn't make sense of the payload
+- `REPO_NOT_FOUND` / `REVIEW_NOT_FOUND` - also returned when the user is not allowed to see the resource (don't leak existence)
+- `BAD_SEVERITY`, `BAD_MODEL` - validation on PATCH /api/repos
+- `RATE_LIMITED` - too many failed auth attempts from this IP

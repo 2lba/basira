@@ -8,7 +8,7 @@ export default function AccountTab() {
         <h2 className="text-sm uppercase tracking-wider text-fg-muted">profile</h2>
         <dl className="mt-3 space-y-3 text-sm">
           <Row label="github user">{user.github_login}</Row>
-          <Row label="email">{user.email || "—"}</Row>
+          <Row label="email">{user.email || " - "}</Row>
           <Row label="basira id" mono>{user.id}</Row>
         </dl>
       </div>

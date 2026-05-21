@@ -107,7 +107,7 @@ function SmtpCard() {
           className="mt-2 text-fg-muted text-xs"
           data-testid="smtp-alternatives-hint"
         >
-          Don't have SMTP? Use Slack or Discord below instead — they work with
+          Don't have SMTP? Use Slack or Discord below instead - they work with
           just a webhook URL.
         </p>
         <SmtpGuide />
@@ -261,19 +261,19 @@ function SmtpGuide() {
           </p>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              <span className="text-fg">host</span> — the server name (e.g.
+              <span className="text-fg">host</span> - the server name (e.g.
               smtp.gmail.com)
             </li>
             <li>
-              <span className="text-fg">port</span> — usually 587 (with
+              <span className="text-fg">port</span> - usually 587 (with
               STARTTLS) or 465 (with SSL)
             </li>
             <li>
-              <span className="text-fg">username</span> — your email or API key
+              <span className="text-fg">username</span> - your email or API key
               identity
             </li>
             <li>
-              <span className="text-fg">password</span> — an app password or
+              <span className="text-fg">password</span> - an app password or
               API key; not your account password
             </li>
           </ul>
@@ -318,7 +318,7 @@ function SmtpGuide() {
 
           <p className="text-fg-muted">
             Prefer not to configure SMTP at all? Slack and Discord work with
-            just a webhook URL — no credentials needed.
+            just a webhook URL - no credentials needed.
           </p>
         </div>
       )}

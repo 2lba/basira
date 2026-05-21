@@ -33,7 +33,7 @@ _BLOCKED_HOSTS = {
 
 
 def _validate_webhook_url(url: str, kind: str) -> str:
-    """Reject anything that isn't a public http(s) URL. Closes SSRF — without
+    """Reject anything that isn't a public http(s) URL. Closes SSRF - without
     this a user can point Slack/Discord at AWS IMDS, internal services, or
     file:// and exfiltrate / probe."""
     url = url.strip()

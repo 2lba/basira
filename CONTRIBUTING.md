@@ -1,6 +1,6 @@
 # Contributing to Basira
 
-Thanks for thinking about contributing. Basira is small and opinionated —
+Thanks for thinking about contributing. Basira is small and opinionated  - 
 please read this before opening a PR, it'll save us both time.
 
 ## Local setup
@@ -49,7 +49,7 @@ All three should be green before you open a PR.
   `ruff check app/ --fix` keep things tidy.
 - Type hints on public functions. Internal helpers can skip them if the
   intent is obvious.
-- No `print` calls in `app/` — use the structlog logger.
+- No `print` calls in `app/` - use the structlog logger.
 
 **JavaScript / React**
 - ESLint flat config (`eslint.config.js`). Run `npx eslint src/` before
@@ -94,6 +94,6 @@ follows the CLAUDE.md house style: short, lowercase commit messages, no
 ## Style of disagreement
 
 If you think a code change is wrong, say so directly. Don't pad with
-"perhaps maybe we could think about" — review is feedback, not therapy.
+"perhaps maybe we could think about" - review is feedback, not therapy.
 If you disagree with a reviewer, push back; if you change your mind,
 say so. The honest version wins.

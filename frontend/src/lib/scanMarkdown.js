@@ -10,14 +10,14 @@ export function buildScanMarkdown(scan) {
   const ref = scan.head_sha || "HEAD";
 
   const lines = [];
-  lines.push(`# Scan report — ${repo}`);
+  lines.push(`# Scan report - ${repo}`);
   lines.push("");
   lines.push(`- Date: ${finishedAt}`);
   if (sha) lines.push(`- Commit: \`${sha}\``);
   if (scan.ref) lines.push(`- Branch: \`${scan.ref}\``);
   if (scan.model) lines.push(`- Model: \`${scan.model}\``);
   lines.push(`- Status: ${scan.status}`);
-  lines.push(`- Score: **${scan.score ?? "—"} / 100**`);
+  lines.push(`- Score: **${scan.score ?? " - "} / 100**`);
   if (scan.files_scanned != null) {
     lines.push(`- Files scanned: ${scan.files_scanned}`);
   }
@@ -51,7 +51,7 @@ export function buildScanMarkdown(scan) {
       for (const f of items) {
         const loc = f.line ? `${f.path}:${f.line}` : f.path;
         const ghUrl = buildGithubUrl(ghBase, ref, f.path, f.line);
-        lines.push(`### \`${loc}\` — ${f.category}`);
+        lines.push(`### \`${loc}\` - ${f.category}`);
         lines.push("");
         lines.push(f.message);
         lines.push("");

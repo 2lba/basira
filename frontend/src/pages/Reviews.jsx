@@ -120,7 +120,7 @@ function StatusPill({ status }) {
 }
 
 function Counts({ counts }) {
-  if (!counts || !counts.total) return <span>—</span>;
+  if (!counts || !counts.total) return <span> - </span>;
   return (
     <span className="font-mono text-xs">
       {counts.critical ? <span className="text-danger">{counts.critical}c </span> : null}

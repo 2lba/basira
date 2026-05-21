@@ -121,7 +121,7 @@ async def test_e2e_webhook_to_posted_review(client, db, monkeypatch):
                             "side": "RIGHT",
                             "severity": "critical",
                             "category": "security",
-                            "message": "Token compared with == — timing attack risk.",
+                            "message": "Token compared with == - timing attack risk.",
                             "suggestion": "use secrets.compare_digest",
                             "confidence": 0.95,
                         }

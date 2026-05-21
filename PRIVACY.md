@@ -1,11 +1,11 @@
-# Basira — Privacy
+# Basira - Privacy
 
 Plain-English version. Last updated 2026-05-19, v0.1.0.
 
 ## What this is
 
 Basira is open source and self-hostable. If you're using a deployment
-that someone else runs, ask them for *their* privacy notice — this
+that someone else runs, ask them for *their* privacy notice - this
 document only covers what Basira itself collects and stores.
 
 ## What we store
@@ -37,13 +37,13 @@ third-party tracking cookies.
 
 ## What we send to third parties
 
-- **Anthropic (Claude)** — your repository's source code, only at scan
+- **Anthropic (Claude)** - your repository's source code, only at scan
   time, only the files you didn't ignore, only inside the request body
   for the scan call. Anthropic's data policy applies to that call. The
   request body is **not** persisted by us.
-- **GitHub** — same access GitHub already grants the App you installed:
+- **GitHub** - same access GitHub already grants the App you installed:
   read repo contents, read/write pull requests, write commit statuses.
-- **Slack / Discord** — only if you configured a webhook. We post a
+- **Slack / Discord** - only if you configured a webhook. We post a
   short summary message (repo name, score, findings count, link to the
   scan report).
 
@@ -66,7 +66,7 @@ You can:
   [github.com/settings/applications](https://github.com/settings/applications).
 
 If you're in a jurisdiction with stronger rules (GDPR, Saudi PDPL, etc.)
-those apply on top — file a request and we'll honor it.
+those apply on top - file a request and we'll honor it.
 
 ## Security
 

@@ -3,7 +3,7 @@
 Wave-4.5 ownership fix: existing rows in github_installations have user_id =
 NULL because the webhook handler never set it. For User-type installations
 this matches account_login -> users.github_login (with github_user_id as a
-preferred match). Org installs are left NULL — they have no single owner.
+preferred match). Org installs are left NULL - they have no single owner.
 
 Revision ID: 0011
 Revises: 0010

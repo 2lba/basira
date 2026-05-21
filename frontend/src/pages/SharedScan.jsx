@@ -65,11 +65,11 @@ export default function SharedScan() {
                 summary
               </h2>
               <p className="mt-2 text-fg leading-relaxed">
-                {data.summary || "—"}
+                {data.summary || " - "}
               </p>
               <dl className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                <Stat label="files" value={data.files_scanned ?? "—"} />
-                <Stat label="model" value={data.model || "—"} />
+                <Stat label="files" value={data.files_scanned ?? " - "} />
+                <Stat label="model" value={data.model || " - "} />
                 <Stat
                   label="critical"
                   value={(data.counts && data.counts.critical) || 0}

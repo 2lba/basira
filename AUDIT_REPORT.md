@@ -1,4 +1,4 @@
-# Basira — Production-Readiness Audit
+# Basira - Production-Readiness Audit
 
 Date: 2026-05-19  ·  Auditor: Claude Opus 4.7 (session-bound)  ·  Branch: `small-improvement`
 
@@ -75,7 +75,7 @@ Notable wins:
 - JWT with `alg:none` is rejected.
 - Webhook replays return `{"duplicate": true}` and do **not** re-process.
 
-## OWASP Top 10 — final scorecard
+## OWASP Top 10 - final scorecard
 
 | Item | Status | Evidence |
 |------|--------|----------|
@@ -106,7 +106,7 @@ Full breakdown: `docs/security/owasp-audit.md`.
 - [x] `.env` never committed; lockfiles committed; `secrets/` mounted RO
 - [x] Refresh-token reuse detection (full family revoke on reuse)
 - [ ] Sentry/monitoring connected (hook stubbed, not wired)
-- [ ] DB backups scheduled (documented in `docs/operations/backup.md` —
+- [ ] DB backups scheduled (documented in `docs/operations/backup.md`  - 
       placeholder; host operator must wire pg_dump cron)
 - [ ] Audit log table for sensitive operations (roadmap)
 - [ ] CSRF tokens on top of SameSite=lax (roadmap)
@@ -115,21 +115,21 @@ Full breakdown: `docs/security/owasp-audit.md`.
 
 ## Open issues (won't-fix-this-cycle)
 
-1. **No CSRF tokens** — SameSite=lax cookies block the common CSRF
+1. **No CSRF tokens** - SameSite=lax cookies block the common CSRF
    patterns, but a token-based defense would be stronger. Defensive but
    not blocking for v0.1.
-2. **No audit log** — settings/scope changes go to structlog only, not
+2. **No audit log** - settings/scope changes go to structlog only, not
    a queryable table. Acceptable for self-hosted single-user.
 3. **OAuth `/user/repos` returns 403 on GitHub App tokens.**
    Architectural, inherited from GitHub. The dashboard shows an empty
-   list until the user installs the App — handled gracefully (empty
+   list until the user installs the App - handled gracefully (empty
    state with install CTA). Documented in `CHANGELOG.md`
    known-limitations.
 4. **Scoring formula is harsh.** `100 − Σ severity×weight` caps the
    penalty at 100, so any repo with ~10+ findings tops out at score 0.
    Honest for v0.1 per the owner's call.
 5. **`reviewly-backend` editable install lingers in the dev container.**
-   Cosmetic — `pip-audit` skips it. A fresh container is clean.
+   Cosmetic - `pip-audit` skips it. A fresh container is clean.
 
 ## Things I did NOT verify
 
@@ -140,7 +140,7 @@ Full breakdown: `docs/security/owasp-audit.md`.
   text) is solid in principle, but a follow-up test with a
   deliberately hostile repo would close the gap.
 - **Anthropic API key disclosure via logs.** I manually reviewed every
-  `log.*` call — no key flows through — but I did not write an
+  `log.*` call - no key flows through - but I did not write an
   automated test that scans the log stream for leaks.
 - **Concurrent OAuth from two tabs.** State cookie overwrites means
   the second callback wins. Not exploitable, but a UX paper cut.
@@ -150,16 +150,16 @@ Full breakdown: `docs/security/owasp-audit.md`.
 
 ## Decisions taken without asking
 
-- **Vite 7.3.3 instead of 8.0.13** — Vite 8 breaks HMR
+- **Vite 7.3.3 instead of 8.0.13** - Vite 8 breaks HMR
   (`__WS_TOKEN__` ReferenceError) in our dev config. 7.3.3 ships the
   same esbuild ≥0.25 (closing the CVE) without the regression.
-- **`react-router-dom 7.15.1`** instead of `7.1.1` — required for the
+- **`react-router-dom 7.15.1`** instead of `7.1.1` - required for the
   XSS fixes.
-- **`fastapi 0.136.1` + explicit `starlette==0.49.1`** — fastapi's
+- **`fastapi 0.136.1` + explicit `starlette==0.49.1`** - fastapi's
   own pin caps starlette at `<0.49.0`, but starlette `0.49.1` is
   needed to clear CVE-2025-62727. The version skew is benign because
   fastapi only imports symbols that are still present in 0.49.
-- **Idempotent CI test DB creation** — CI now does `CREATE DATABASE
+- **Idempotent CI test DB creation** - CI now does `CREATE DATABASE
   basira_test … || true` so re-runs don't fail on existing DB.
 
 ## Confidence
@@ -173,7 +173,7 @@ strangers).
 Reasoning for the gap:
 - The code itself is solid: zero known CVEs, tested, defensive, with
   every OWASP-Top-10 item in Pass or Partial.
-- For self-hosters that's enough — they own their data and trust
+- For self-hosters that's enough - they own their data and trust
   themselves.
 - For SaaS the gaps are operational, not code-level: no Sentry,
   no audit-log table, no DB backup automation, no on-call runbook,
@@ -203,5 +203,5 @@ docker compose exec -T frontend npm audit --audit-level=high   # 0 vulns
 cd frontend/e2e && npx playwright test                          # 48 passing
 ```
 
-If any of the above is red, please open an issue — either the report
+If any of the above is red, please open an issue - either the report
 is wrong or the dependency landscape moved underneath us.

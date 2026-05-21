@@ -7,7 +7,7 @@ All notable changes to Basira are recorded here. Format loosely follows
 
 Nothing yet.
 
-## [0.1.0] — 2026-05-19
+## [0.1.0] - 2026-05-19
 
 First public release. Scan-now flow works end-to-end on real
 repositories; the rest of this list is what shipped.
@@ -15,7 +15,7 @@ repositories; the rest of this list is what shipped.
 ### Features
 - GitHub OAuth + GitHub App installation flow
 - Repository discovery (connected via App + OAuth-visible via /user/repos)
-- One-click "Scan now" — pulls the tree, chunks files by token budget,
+- One-click "Scan now" - pulls the tree, chunks files by token budget,
   drives Claude with a structured-output prompt, persists findings with
   severity / category / suggestion
 - Per-repo settings: enable/disable, severity threshold, ignored paths,
@@ -48,7 +48,7 @@ repositories; the rest of this list is what shipped.
 - `assert_production_safe()` refuses to boot in `APP_ENV=production`
   with any default secret still in place
 - All routes go through `user_can_access_repo` before reading or writing
-  a repo / scan / finding (404, not 403, on miss — so IDs don't leak)
+  a repo / scan / finding (404, not 403, on miss - so IDs don't leak)
 - OWASP Top 10 coverage in `docs/security/owasp-audit.md`
 - Zero known CVEs (`pip-audit` + `npm audit` clean as of release)
 
@@ -65,7 +65,7 @@ repositories; the rest of this list is what shipped.
 - OAuth `user/repos` returns 403 on most GitHub App user-to-server
   tokens; users with no installed repos see an empty dashboard until
   they install the App.
-- Scoring formula is harsh — a repo with ~50 minor findings will score
+- Scoring formula is harsh - a repo with ~50 minor findings will score
   near 0. Intentional for v0.1.0.
 - No formal audit log (use structlog output for forensics).
 - No 2FA / step-up auth.
@@ -74,6 +74,6 @@ repositories; the rest of this list is what shipped.
 
 ### Migration notes
 - Renamed from internal codename "Reviewly". Old `.env`s using
-  `REVIEWLY_*` won't load — copy `.env.example` to `.env` and re-fill.
+  `REVIEWLY_*` won't load - copy `.env.example` to `.env` and re-fill.
 - DB schema is at `0011`. `down -v` wipes data; `docker compose up`
   re-runs migrations automatically.
