@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     def assert_production_safe(self) -> None:
         """Fail fast if a production deployment is missing real secrets.
         Called once at app startup. Each rule fires only when APP_ENV is
-        'production' — dev keeps using the defaults."""
+        'production' - dev keeps using the defaults."""
         if not self.is_production:
             return
         problems: list[str] = []

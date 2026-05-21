@@ -69,7 +69,7 @@ async def validate_anthropic_key(api_key: str) -> ValidationResult:
         status = getattr(e, "status_code", "?")
         return ValidationResult(False, f"anthropic returned {status}")
     except Exception as e:
-        # network / transient — bubble up the class name only, don't leak
+        # network / transient - bubble up the class name only, don't leak
         # internals into the user-facing message
         return ValidationResult(False, f"validation failed: {e.__class__.__name__}")
 

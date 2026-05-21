@@ -61,7 +61,7 @@ def _auth_cookies(user_id: str, login: str) -> dict:
     return {"basira_access": issue_access_token(user_id, {"login": login})}
 
 
-# A01 — Broken Access Control (IDOR) -------------------------------------
+# A01 - Broken Access Control (IDOR) -------------------------------------
 
 
 async def test_user_b_cannot_read_user_a_repo(client, db):
@@ -144,7 +144,7 @@ async def test_unauthenticated_caller_gets_401_not_500(client, db):
     assert r.status_code == 401
 
 
-# A02 — JWT tampering ----------------------------------------------------
+# A02 - JWT tampering ----------------------------------------------------
 
 
 async def test_tampered_jwt_payload_is_rejected(client, db):
@@ -185,7 +185,7 @@ async def test_random_garbage_jwt_is_rejected(client):
     assert r.status_code == 401
 
 
-# A07 — Webhook auth -----------------------------------------------------
+# A07 - Webhook auth -----------------------------------------------------
 
 
 async def test_webhook_missing_signature_returns_401(client):
@@ -257,7 +257,7 @@ async def test_webhook_replay_is_deduped(client, db):
     assert r2.json().get("duplicate") is True
 
 
-# A03 — Injection --------------------------------------------------------
+# A03 - Injection --------------------------------------------------------
 
 
 async def test_sql_injection_in_uuid_param_is_rejected_cleanly(client, db):
@@ -289,7 +289,7 @@ async def test_xss_payload_in_settings_is_stored_verbatim_not_executed(client, d
     assert r.json()["custom_rules"] == xss
 
 
-# A10 — SSRF on webhook URL fields --------------------------------------
+# A10 - SSRF on webhook URL fields --------------------------------------
 
 
 @pytest.mark.parametrize(

@@ -80,7 +80,7 @@ export default function Repos() {
                 <div>
                   <div className="text-fg font-medium">{r.full_name}</div>
                   <div className="text-fg-muted text-xs mt-0.5">
-                    not connected — install the app to enable scans
+                    not connected - install the app to enable scans
                   </div>
                 </div>
               </div>

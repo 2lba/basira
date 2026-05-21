@@ -75,10 +75,10 @@ def _noreply_email(user_id: int, login: str) -> str:
 async def fetch_profile(access_token: str) -> GithubProfile:
     """Read the OAuth user. Email is best-effort:
 
-    1. /user.email — public email if the user exposes one
-    2. /user/emails — primary verified address (needs the App's "Email
+    1. /user.email - public email if the user exposes one
+    2. /user/emails - primary verified address (needs the App's "Email
        addresses" permission; returns 403 otherwise)
-    3. {user_id}+{login}@users.noreply.github.com — GitHub's deliverable
+    3. {user_id}+{login}@users.noreply.github.com - GitHub's deliverable
        anonymous relay; used so we always have a non-null string in DB and
        /auth/me doesn't break for users who never installed the email
        permission.
@@ -109,7 +109,7 @@ async def fetch_profile(access_token: str) -> GithubProfile:
                         email = primary.get("email")
                 elif er.status_code in (403, 404):
                     # GitHub App lacks the Email addresses permission, or the
-                    # user denied it. Not an error — fall through to noreply.
+                    # user denied it. Not an error - fall through to noreply.
                     logging.getLogger("basira.oauth").info(
                         "fetch_profile.emails_unavailable status=%s", er.status_code
                     )

@@ -46,7 +46,7 @@ SYSTEM_PROMPT = dedent(
 _EXAMPLE_1_OUTPUT = (
     '{"findings":[{"file":"app/auth.py","line":12,"side":"RIGHT",'
     '"severity":"critical","category":"security",'
-    '"message":"Token compared with == — vulnerable to timing attacks. '
+    '"message":"Token compared with == - vulnerable to timing attacks. '
     'Use secrets.compare_digest.",'
     '"suggestion":"return secrets.compare_digest(token, EXPECTED)",'
     '"confidence":0.95}],'

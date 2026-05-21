@@ -35,7 +35,7 @@ export function useKeyboardShortcuts({ onScanNow, onOpenHelp }) {
         return;
       }
 
-      // help modal — accept both "?" key and Shift+Slash
+      // help modal - accept both "?" key and Shift+Slash
       if (e.key === "?" || (e.key === "/" && e.shiftKey)) {
         e.preventDefault();
         onOpenHelp && onOpenHelp();

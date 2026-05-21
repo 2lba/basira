@@ -66,10 +66,10 @@ docker compose exec backend env | grep -E "BASE_URL|E2E"
 
 curl -s -o /dev/null -w '%{http_code}\n' \
     -X POST http://localhost:8001/test/seed
-# 404 — good, /test/* not mounted
+# 404 - good, /test/* not mounted
 
 docker compose logs backend --tail=50 | grep -i e2e_test_mode || echo ok
-# ok — no e2e warning
+# ok - no e2e warning
 
 curl -s -X GET http://localhost:8001/auth/github/login -i | grep -i location
 # Location should contain your real ngrok host, not localhost

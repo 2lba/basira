@@ -16,7 +16,7 @@ export default function ScoreChart({ scans }) {
     .map((s, i) => ({
       idx: i + 1,
       score: s.score,
-      sha: s.head_sha ? s.head_sha.slice(0, 7) : "—",
+      sha: s.head_sha ? s.head_sha.slice(0, 7) : " - ",
       date: new Date(s.created_at).toLocaleDateString(),
     }));
 

@@ -6,7 +6,7 @@ labels: enhancement
 
 ## What problem does this solve
 
-<!-- The user pain or unmet need. Not "I want feature X" — explain what
+<!-- The user pain or unmet need. Not "I want feature X" - explain what
 goes wrong without it. -->
 
 ## Proposed shape

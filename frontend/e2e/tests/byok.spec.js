@@ -74,7 +74,7 @@ test.describe("byok flow", () => {
     await page.getByTestId("missing-key-banner-dismiss").click();
     await expect(banner).toBeHidden();
 
-    // reload — banner stays hidden because localStorage flag persists
+    // reload - banner stays hidden because localStorage flag persists
     await page.reload();
     await expect(page.getByTestId("missing-key-banner")).toBeHidden();
   });

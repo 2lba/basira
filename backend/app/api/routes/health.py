@@ -10,13 +10,13 @@ router = APIRouter(tags=["health"])
 
 @router.get("/healthz")
 async def healthz() -> dict[str, str]:
-    """Liveness — process is up. Used by docker healthcheck."""
+    """Liveness - process is up. Used by docker healthcheck."""
     return {"status": "ok"}
 
 
 @router.get("/readyz")
 async def readyz(response: Response) -> dict:
-    """Readiness — every dependency the API needs is reachable. Used by
+    """Readiness - every dependency the API needs is reachable. Used by
     orchestrators before sending real traffic."""
     s = get_settings()
     out: dict = {"status": "ok", "db": "up", "redis": "up"}
@@ -46,7 +46,7 @@ async def readyz(response: Response) -> dict:
 
 @router.get("/version")
 async def version() -> dict[str, str]:
-    """Build info — git sha + version string. Helpful for matching a bug
+    """Build info - git sha + version string. Helpful for matching a bug
     report to a deployment."""
     import os
 

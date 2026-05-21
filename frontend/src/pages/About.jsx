@@ -63,7 +63,7 @@ export default function About() {
           >
             Abdulaziz AlQahtani
           </a>{" "}
-          <span className="text-fg-muted">— @2lba</span>
+          <span className="text-fg-muted"> -  @2lba</span>
         </p>
       </div>
     </section>

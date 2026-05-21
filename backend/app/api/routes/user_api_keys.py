@@ -47,7 +47,7 @@ async def list_api_keys(
     db: AsyncSession = Depends(get_db),
 ):
     """List the keys this user has configured. We never return the key
-    itself — only `key_last_four`."""
+    itself - only `key_last_four`."""
     row = await get_user_api_key_row(db, user.id, PROVIDER_ANTHROPIC)
     return [_to_out(row)] if row else []
 

@@ -1,10 +1,10 @@
-# Basira — AI Code Reviewer
+# Basira - AI Code Reviewer
 
 ## Project Overview
 Open source AI-powered code reviewer for GitHub Pull Requests.
 Free alternative to CodeRabbit, fully self-hostable.
 
-Name: Basira (Arabic: بصيرة) — insight, foresight.
+Name: Basira (Arabic: بصيرة) - insight, foresight.
 Tagline: "We see what you don't."
 Renamed from the prior working name during wave 4.5.
 
@@ -185,14 +185,14 @@ Dark-mode native. No light theme is shipped or planned.
 - Text primary: #fafafa
 - Text secondary: #a3a3a3
 - Text tertiary / muted: #525252
-- Accent (interactive): #06b6d4 (cyan-500) — matches the Basira logo dot
+- Accent (interactive): #06b6d4 (cyan-500) - matches the Basira logo dot
 - Accent hover: #22d3ee (cyan-400)
 - Success: #10b981
 - Warning: #f59e0b
 - Danger: #ef4444
 
 Wordmark color uses a CSS variable (`--basira-wordmark`, default `#fafafa`)
-so the logo can invert if it ever lands on a light surface — but the app
+so the logo can invert if it ever lands on a light surface - but the app
 itself does not ship a light theme.
 
 ### Typography

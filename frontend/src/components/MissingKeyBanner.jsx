@@ -26,7 +26,7 @@ function markDismissed() {
   try {
     localStorage.setItem(DISMISS_KEY, "1");
   } catch {
-    // localStorage may be blocked — that's fine, user just sees banner again next load
+    // localStorage may be blocked - that's fine, user just sees banner again next load
   }
 }
 
@@ -51,7 +51,7 @@ export default function MissingKeyBanner() {
         );
         if (cancelled) return;
         if (hasAnthropic) {
-          // user added a key — clear the dismiss flag so the banner
+          // user added a key - clear the dismiss flag so the banner
           // reappears if they later remove the key again
           clearDismissed();
           setShow(false);

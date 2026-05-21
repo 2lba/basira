@@ -1,10 +1,10 @@
-# OWASP Top 10 (2021) — Basira audit
+# OWASP Top 10 (2021) - Basira audit
 
 For each item: a **Status** (Pass / Partial / Open / N/A) and the concrete
 controls that earn it. Anything that says "Partial" or "Open" is in the
 roadmap.
 
-## A01 — Broken Access Control
+## A01 - Broken Access Control
 
 **Status: Pass**
 
@@ -18,14 +18,14 @@ roadmap.
 - Unauthenticated requests return 401, not 500: covered by
   `test_unauthenticated_caller_gets_401_not_500`.
 
-## A02 — Cryptographic Failures
+## A02 - Cryptographic Failures
 
 **Status: Pass**
 
 - JWT: HS256 with a server-only `SECRET_KEY`. Tampered payloads rejected
   (`test_tampered_jwt_payload_is_rejected`). `alg:none` rejected
   (`test_jwt_with_empty_signature_is_rejected`).
-- Passwords: **none stored** — auth is via GitHub OAuth. `bcrypt` is
+- Passwords: **none stored** - auth is via GitHub OAuth. `bcrypt` is
   pinned but unused; kept for future basic-auth fallback.
 - OAuth tokens: encrypted at rest with Fernet (`token_encryption_key`).
 - SMTP password / Slack URL / Discord URL: same Fernet pipeline.
@@ -33,7 +33,7 @@ roadmap.
   `Secure=True` only when `APP_ENV=production`; in dev they're plain so
   `localhost` works without a cert.
 
-## A03 — Injection
+## A03 - Injection
 
 **Status: Pass**
 
@@ -41,11 +41,11 @@ roadmap.
   input; the two exceptions are alembic migrations and the test
   `TRUNCATE` statement.
 - UUID inputs go through `uuid.UUID(...)` before any DB lookup, so
-  malformed paths get a 400 — never reach the query.
+  malformed paths get a 400 - never reach the query.
 - Tests: `test_sql_injection_in_uuid_param_is_rejected_cleanly`.
 - Shell: no `subprocess` / `os.system` calls in the request path.
 
-## A04 — Insecure Design
+## A04 - Insecure Design
 
 **Status: Partial**
 
@@ -55,7 +55,7 @@ roadmap.
 - **Open**: no explicit CSRF token on state-changing endpoints. We lean
   on `SameSite=lax` cookies. Roadmap.
 
-## A05 — Security Misconfiguration
+## A05 - Security Misconfiguration
 
 **Status: Pass**
 
@@ -70,7 +70,7 @@ roadmap.
   `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
   `Permissions-Policy` clamping accelerometer/camera/geo/mic.
 
-## A06 — Vulnerable and Outdated Components
+## A06 - Vulnerable and Outdated Components
 
 **Status: Pass (zero known CVEs at audit time)**
 
@@ -85,7 +85,7 @@ roadmap.
 - CI runs `pip-audit` and `npm audit` on every PR (see
   `.github/workflows/ci.yml`).
 
-## A07 — Identification and Authentication Failures
+## A07 - Identification and Authentication Failures
 
 **Status: Pass**
 
@@ -93,11 +93,11 @@ roadmap.
   single-use refresh with reuse detection (entire family revoked).
 - Account lockout: 5 failed OAuth attempts per IP in a 15-minute window;
   enforced via Redis counter.
-- No password reuse vector — we don't store any password.
+- No password reuse vector - we don't store any password.
 - MFA: handled by GitHub, so we inherit whatever the user configured
   there.
 
-## A08 — Software and Data Integrity Failures
+## A08 - Software and Data Integrity Failures
 
 **Status: Pass**
 
@@ -108,7 +108,7 @@ roadmap.
   installation owner by `account_id`/`account_login` so a renamed user
   can't hijack another user's installation.
 
-## A09 — Security Logging and Monitoring Failures
+## A09 - Security Logging and Monitoring Failures
 
 **Status: Partial**
 
@@ -120,7 +120,7 @@ roadmap.
 - **Open**: no audit table for settings/scope changes; relying on log
   retention. A Sentry hook is stubbed but not wired. Roadmap.
 
-## A10 — Server-Side Request Forgery
+## A10 - Server-Side Request Forgery
 
 **Status: Pass**
 

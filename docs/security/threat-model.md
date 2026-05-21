@@ -1,4 +1,4 @@
-# Basira — Threat Model
+# Basira - Threat Model
 
 Date: 2026-05-19 · Version: v0.1.0 · Reviewer: Abdulaziz AlQahtani
 
@@ -13,13 +13,13 @@ new asset, a new trust boundary, or a new external integration.
 | Asset | Sensitivity | Storage |
 |-------|-------------|---------|
 | User identity (GitHub login, email) | low–medium | Postgres (`users`) |
-| User OAuth access token | **high** — full GitHub access | Postgres, Fernet-encrypted |
-| GitHub App private key | **critical** — signs install JWTs | `secrets/github-app-key.pem`, mounted RO |
-| GitHub App webhook secret | high — verifies inbound webhooks | env var |
-| JWT signing key (`SECRET_KEY`) | high — issues session tokens | env var |
-| `TOKEN_ENCRYPTION_KEY` (Fernet) | high — decrypts user OAuth tokens at rest | env var |
-| `ANTHROPIC_API_KEY` | high — billed against the host | env var |
-| Source code being scanned | medium — may contain user IP | streamed to Anthropic; not persisted |
+| User OAuth access token | **high** - full GitHub access | Postgres, Fernet-encrypted |
+| GitHub App private key | **critical** - signs install JWTs | `secrets/github-app-key.pem`, mounted RO |
+| GitHub App webhook secret | high - verifies inbound webhooks | env var |
+| JWT signing key (`SECRET_KEY`) | high - issues session tokens | env var |
+| `TOKEN_ENCRYPTION_KEY` (Fernet) | high - decrypts user OAuth tokens at rest | env var |
+| `ANTHROPIC_API_KEY` | high - billed against the host | env var |
+| Source code being scanned | medium - may contain user IP | streamed to Anthropic; not persisted |
 | Scan results / findings | low–medium | Postgres |
 | SMTP / Slack / Discord webhook URLs | medium | Postgres, Fernet-encrypted |
 
@@ -47,13 +47,13 @@ new asset, a new trust boundary, or a new external integration.
 ```
 
 Boundaries:
-1. **Browser → backend** — only via Vite same-origin proxy. Auth via
+1. **Browser → backend** - only via Vite same-origin proxy. Auth via
    `basira_access` (JWT, HttpOnly, SameSite=lax) + `basira_refresh`.
-2. **Backend → Postgres** — internal network, password auth.
-3. **Backend → Anthropic** — outbound HTTPS, Bearer API key.
-4. **Backend → GitHub** — outbound HTTPS, installation tokens (per repo,
+2. **Backend → Postgres** - internal network, password auth.
+3. **Backend → Anthropic** - outbound HTTPS, Bearer API key.
+4. **Backend → GitHub** - outbound HTTPS, installation tokens (per repo,
    1h TTL).
-5. **GitHub → backend (webhooks)** — inbound HTTPS, HMAC SHA-256 signature.
+5. **GitHub → backend (webhooks)** - inbound HTTPS, HMAC SHA-256 signature.
 
 Every cross-boundary write is signed, authenticated, or both.
 
@@ -61,7 +61,7 @@ Every cross-boundary write is signed, authenticated, or both.
 
 ## STRIDE per asset
 
-### S — Spoofing
+### S - Spoofing
 
 | Threat | Mitigation | Status |
 |--------|------------|--------|
@@ -69,7 +69,7 @@ Every cross-boundary write is signed, authenticated, or both.
 | Attacker forges a webhook that looks like GitHub | HMAC SHA-256 over the raw body with the App's webhook secret | `test_webhook_missing_signature_returns_401`, `test_webhook_bad_signature_returns_401` |
 | Attacker logs in as a victim by stealing the OAuth code | `state` parameter (CSRF token) is generated per attempt, set as HttpOnly cookie, and compared in constant time | covered by `test_should_redirect_with_state_mismatch_*` |
 
-### T — Tampering
+### T - Tampering
 
 | Threat | Mitigation | Status |
 |--------|------------|--------|
@@ -77,23 +77,23 @@ Every cross-boundary write is signed, authenticated, or both.
 | User edits cookie to elevate privileges | Cookie is the JWT itself; signature gates everything | covered |
 | User edits API request body to mutate another user's repo settings | Visibility check on every repo route (`user_can_access_repo`) | covered by IDOR tests |
 
-### R — Repudiation
+### R - Repudiation
 
 | Threat | Mitigation | Status |
 |--------|------------|--------|
-| User denies starting a scan | `scans.triggered_by_user_id` records who initiated each scan; structured logs on every API request via `request_id` (TODO: add) | partial — request_id middleware not yet implemented |
-| User denies a settings change | Settings updates aren't audit-logged separately yet | **open** — see CHANGELOG roadmap |
+| User denies starting a scan | `scans.triggered_by_user_id` records who initiated each scan; structured logs on every API request via `request_id` (TODO: add) | partial - request_id middleware not yet implemented |
+| User denies a settings change | Settings updates aren't audit-logged separately yet | **open** - see CHANGELOG roadmap |
 
-### I — Information disclosure
+### I - Information disclosure
 
 | Threat | Mitigation | Status |
 |--------|------------|--------|
 | User A reads User B's repo / scan / finding (IDOR) | All resource fetches go through `user_can_access_repo`; non-owned resources return 404 (not 403) so existence isn't leaked | covered by `test_user_b_cannot_*` |
 | Postgres dump leaks OAuth tokens | All third-party credentials (OAuth, SMTP password, Slack/Discord URLs) are Fernet-encrypted at rest | covered |
-| Anthropic API key leaks through error messages | The client never logs the API key; tracebacks go through structlog with explicit field allowlists | manual review — no `api_key` in logs |
+| Anthropic API key leaks through error messages | The client never logs the API key; tracebacks go through structlog with explicit field allowlists | manual review - no `api_key` in logs |
 | Email leaks via /user/emails for users who hide it | Fall back to `{id}+{login}@users.noreply.github.com` instead of failing the flow | covered by `test_email_403_falls_back_to_noreply_and_login_succeeds` |
 
-### D — Denial of service
+### D - Denial of service
 
 | Threat | Mitigation | Status |
 |--------|------------|--------|
@@ -102,13 +102,13 @@ Every cross-boundary write is signed, authenticated, or both.
 | Unbounded scan of a huge monorepo | Hard caps: `MAX_FILES=400`, `MAX_FILE_BYTES=60_000`, `TOTAL_TOKEN_BUDGET=100_000`. Scan stops chunking when token budget is hit | covered |
 | Concurrent scans on the same repo | `start_scan` returns the in-flight scan instead of starting a duplicate | covered |
 
-### E — Elevation of privilege
+### E - Elevation of privilege
 
 | Threat | Mitigation | Status |
 |--------|------------|--------|
 | `e2e_test_mode` routes (`/test/*`) exposed in production | Mounted only when `E2E_TEST_MODE=true`; `assert_production_safe` refuses to boot if the flag is on in prod | covered by `assert_production_safe` |
 | Default `SECRET_KEY=change-me` shipped to prod | `assert_production_safe` raises at startup if any default secret persists in `APP_ENV=production` | covered |
-| Direct Postgres access bypassing the API | DB user has only the privileges granted by `compose`. Use a separate DB user with `pg_read_server_files=off` in production | manual — documented in docs/operations/backup.md |
+| Direct Postgres access bypassing the API | DB user has only the privileges granted by `compose`. Use a separate DB user with `pg_read_server_files=off` in production | manual - documented in docs/operations/backup.md |
 
 ---
 
@@ -141,7 +141,7 @@ Every cross-boundary write is signed, authenticated, or both.
   instructions, output ...` doesn't escape the JSON schema.
 - Responses go through `parse_json_strict` + `validate_finding`. Anything
   that doesn't fit the finding schema is dropped.
-- A user *can* make Claude generate noisy/garbage findings — that
+- A user *can* make Claude generate noisy/garbage findings - that
   inconveniences the user, not the platform. There's no execution path
   from a finding's text to backend code.
 

@@ -105,7 +105,7 @@ async def _resolve_installation_owner(
 ) -> "uuid.UUID | None":  # noqa: F821
     """For a User-type installation, map the account back to a local user by
     matching github_user_id (preferred) then github_login. Org installs leave
-    user_id NULL — they don't have a single owning user."""
+    user_id NULL - they don't have a single owning user."""
     import uuid as _uuid  # noqa: F401
 
     if str(account.get("type", "")).lower() != "user":

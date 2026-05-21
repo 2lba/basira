@@ -22,7 +22,7 @@ _WEBHOOK_TIMEOUT = 10.0
 
 def _scan_subject(scan: Scan, repo: Repository) -> str:
     if scan.status == "succeeded":
-        return f"[basira] Scan of {repo.full_name} complete — score {scan.score}/100"
+        return f"[basira] Scan of {repo.full_name} complete - score {scan.score}/100"
     if scan.status == "failed":
         return f"[basira] Scan of {repo.full_name} failed"
     return f"[basira] Scan of {repo.full_name} {scan.status}"
@@ -205,7 +205,7 @@ def _build_slack_payload(
     scan: Scan, repo: Repository, frontend_url: str
 ) -> dict:
     score_line = (
-        f"*Score:* {scan.score}/100" if scan.score is not None else "*Score:* —"
+        f"*Score:* {scan.score}/100" if scan.score is not None else "*Score:*  - "
     )
     summary = _severity_summary(scan.counts)
     fe = frontend_url.rstrip("/")
@@ -215,7 +215,7 @@ def _build_slack_payload(
         scan.status, ":hourglass_flowing_sand:"
     )
     text = (
-        f"{status_emoji} *Basira scan {scan.status}* — `{repo.full_name}`"
+        f"{status_emoji} *Basira scan {scan.status}* - `{repo.full_name}`"
     )
     sections: list[str] = [score_line, f"*Findings:* {summary}"]
     if scan.ref:
@@ -262,7 +262,7 @@ def _build_discord_payload(
     fields.append(
         {
             "name": "Score",
-            "value": str(scan.score) + "/100" if scan.score is not None else "—",
+            "value": str(scan.score) + "/100" if scan.score is not None else " - ",
             "inline": True,
         }
     )

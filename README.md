@@ -4,16 +4,16 @@
 
 AI code reviews on every GitHub pull request. Open source. Self-hosted. Free.
 
-The name is Basira (Arabic: بصيرة) — insight, foresight. The tool reads your
+The name is Basira (Arabic: بصيرة) - insight, foresight. The tool reads your
 diffs and tells you what you missed before a reviewer does.
 
-Status: v0.1.0 — early, but feature-complete enough to dogfood. Not battle tested at scale.
+Status: v0.1.0 - early, but feature-complete enough to dogfood. Not battle tested at scale.
 
 ## what it does
 
 1. You install the basira GitHub App on your repo.
 2. Someone opens a pull request.
-3. basira fetches the diff, sends it to Claude with a structured prompt, and posts a review back to the PR — summary comment plus inline comments where it matters.
+3. basira fetches the diff, sends it to Claude with a structured prompt, and posts a review back to the PR - summary comment plus inline comments where it matters.
 4. You read, dismiss, or fix.
 
 ## stack
@@ -21,7 +21,7 @@ Status: v0.1.0 — early, but feature-complete enough to dogfood. Not battle tes
 - python 3.13, fastapi, sqlalchemy 2 async
 - postgres 16, redis, arq workers
 - react 19, vite, tailwind 3
-- claude api (anthropic) — sonnet-4-5 by default
+- claude api (anthropic) - sonnet-4-5 by default
 - github app + webhooks
 - docker compose for local dev
 
@@ -43,15 +43,15 @@ cp .env.example .env
 
 Fill in `.env`:
 
-- `SECRET_KEY` — random string, generate with `python -c "import secrets; print(secrets.token_urlsafe(64))"`
-- `TOKEN_ENCRYPTION_KEY` — Fernet key, generate with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
-- `ANTHROPIC_API_KEY` — from https://console.anthropic.com
-- `GITHUB_APP_ID`, `GITHUB_APP_NAME`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_WEBHOOK_SECRET`, `GITHUB_APP_PRIVATE_KEY_PATH` — see step 2
+- `SECRET_KEY` - random string, generate with `python -c "import secrets; print(secrets.token_urlsafe(64))"`
+- `TOKEN_ENCRYPTION_KEY` - Fernet key, generate with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
+- `ANTHROPIC_API_KEY` - from https://console.anthropic.com
+- `GITHUB_APP_ID`, `GITHUB_APP_NAME`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_WEBHOOK_SECRET`, `GITHUB_APP_PRIVATE_KEY_PATH` - see step 2
 
 ### 2. set up the GitHub App
 
 basira talks to GitHub through a GitHub App that you own. The App's URL slug
-is what users see when they install it on a repo — it must match
+is what users see when they install it on a repo - it must match
 `GITHUB_APP_NAME` in your `.env`.
 
 For local development the default is `basira-dev`. Pick whatever slug GitHub
@@ -65,7 +65,7 @@ Steps to register the App:
 
 1. Go to https://github.com/settings/apps → New GitHub App
 2. **GitHub App name**: must match `GITHUB_APP_NAME` (e.g. `basira-dev`). The
-   slug must be globally unique on GitHub — pick something specific to you.
+   slug must be globally unique on GitHub - pick something specific to you.
 3. Homepage URL: wherever you host basira (or your repo URL while testing)
 4. Webhook URL: `https://your-domain/webhooks/github`
 5. Webhook secret: pick a long random string, put it in `.env` as `GITHUB_APP_WEBHOOK_SECRET`
@@ -86,7 +86,7 @@ make up
 make migrate
 ```
 
-Then open http://localhost:5173 — sign in with GitHub and install the app on a repo. Open a PR. Watch basira comment.
+Then open http://localhost:5173 - sign in with GitHub and install the app on a repo. Open a PR. Watch basira comment.
 
 For development the backend listens on port 8001 on the host (mapped from container port 8000).
 
@@ -167,7 +167,7 @@ deployment/
 
 ## contributing
 
-Issues and PRs welcome. Keep the spirit of "small, sharp, honest code". No marketing language. No emoji. No conventional-commit prefixes — just lowercase short messages.
+Issues and PRs welcome. Keep the spirit of "small, sharp, honest code". No marketing language. No emoji. No conventional-commit prefixes - just lowercase short messages.
 
 ## license
 

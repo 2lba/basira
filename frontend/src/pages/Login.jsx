@@ -9,13 +9,13 @@ const OAUTH_MESSAGES = {
   OAUTH_DENIED: "You declined the GitHub authorization.",
   OAUTH_BAD_REQUEST: "Missing code or state from GitHub. Try again.",
   OAUTH_STATE_MISMATCH:
-    "That sign-in attempt timed out. Try again — this time finish in one go.",
+    "That sign-in attempt timed out. Try again - this time finish in one go.",
   OAUTH_TOKEN_EXCHANGE_FAILED:
     "GitHub rejected our token exchange. Refresh and try again.",
   OAUTH_USER_FETCH_FAILED:
     "We couldn't read your GitHub profile. Check the App permissions, then retry.",
   OAUTH_USER_PERSIST_FAILED:
-    "We couldn't save your account. The database may be down — try again in a minute.",
+    "We couldn't save your account. The database may be down - try again in a minute.",
   OAUTH_SESSION_FAILED:
     "We couldn't issue your session. Refresh and retry.",
   RATE_LIMITED: "Too many sign-in attempts. Wait a minute and try again.",
@@ -78,7 +78,7 @@ export default function Login() {
                 data-testid="oauth-error-code"
               >
                 {err.code}
-                {err.desc ? ` — ${err.desc}` : ""}
+                {err.desc ? ` - ${err.desc}` : ""}
               </p>
             </div>
           </div>

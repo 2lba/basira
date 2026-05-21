@@ -81,7 +81,7 @@ export default function ChatWebhookCard({
         <input
           data-testid={`${testId}-url`}
           className="input mt-1 font-mono text-xs"
-          placeholder={state.url_set ? "stored — paste to replace" : "https://..."}
+          placeholder={state.url_set ? "stored - paste to replace" : "https://..."}
           value={draft.url}
           onChange={(e) => setDraft({ ...draft, url: e.target.value })}
         />

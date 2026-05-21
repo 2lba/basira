@@ -22,7 +22,7 @@ class CORSAlwaysOnMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
         except Exception:
-            # log the traceback before swallowing — otherwise debugging 500s
+            # log the traceback before swallowing - otherwise debugging 500s
             # routed through this middleware is impossible.
             from app.core.logging import get_logger
 

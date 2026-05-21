@@ -12,7 +12,7 @@ class UserApiKey(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     """User-owned third-party API key (BYOK).
 
     Stores the key encrypted at rest with the app's Fernet key. The plain
-    value is never returned via the API — only `key_last_four` is shown
+    value is never returned via the API - only `key_last_four` is shown
     so the user can recognise it.
     """
 
