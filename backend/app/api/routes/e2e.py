@@ -368,3 +368,51 @@ async def scheduler_tick(db: AsyncSession = Depends(get_db)):
 
     created = await run_due_scheduled_scans(db)
     return {"scan_ids": created}
+
+
+@router.post("/revoke-key/{user_id}")
+async def revoke_user_key(user_id: str, db: AsyncSession = Depends(get_db)):
+    """Mark the user's anthropic key invalid without deleting it. Lets the
+    recovery flow test the INVALID_API_KEY surface separately from the
+    MISSING_API_KEY one."""
+    import uuid as _uuid
+
+    from app.models.user_api_key import UserApiKey
+
+    uid = _uuid.UUID(user_id)
+    row = (
+        await db.execute(
+            select(UserApiKey).where(
+                UserApiKey.user_id == uid,
+                UserApiKey.provider == "anthropic",
+                UserApiKey.deleted_at.is_(None),
+            )
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        return {"ok": False, "reason": "no key"}
+    row.is_valid = False
+    await db.commit()
+    return {"ok": True}
+
+
+@router.post("/scans/orphan-running")
+async def mark_running_scans_orphan(db: AsyncSession = Depends(get_db)):
+    """Simulate a backend restart by failing any scan still in pending or
+    running state. Used by the recovery flow to verify the orphan cleanup
+    behaviour we want production to have."""
+    from datetime import UTC, datetime
+
+    from sqlalchemy import update
+
+    result = await db.execute(
+        update(Scan)
+        .where(Scan.status.in_(("pending", "running")))
+        .values(
+            status="failed",
+            error="orphaned by backend restart",
+            finished_at=datetime.now(UTC),
+        )
+    )
+    await db.commit()
+    return {"orphaned": result.rowcount}
