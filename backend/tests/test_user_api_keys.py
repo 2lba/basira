@@ -140,3 +140,106 @@ async def test_full_key_never_appears_in_any_response(
     list_r = await client.get("/api/me/api-keys")
     for r in (put_r, list_r):
         assert secret not in r.text, "plaintext key leaked in response body"
+
+
+async def test_post_test_endpoint_valid_key(client, db, monkeypatch, alice):
+    _patch_validator(monkeypatch, valid=True)
+    _auth(client, alice)
+    await client.put(
+        "/api/me/api-keys/anthropic",
+        json={"api_key": "sk-ant-test-endpoint-good-key-9988"},
+    )
+
+    async def fake_revalidate(db_, user_id, provider):
+        return ValidationResult(True, None)
+
+    monkeypatch.setattr(
+        "app.api.routes.user_api_keys.revalidate_user_api_key", fake_revalidate
+    )
+    r = await client.post("/api/me/api-keys/anthropic/test")
+    assert r.status_code == 200
+    assert r.json()["valid"] is True
+
+
+async def test_post_test_endpoint_invalid_key(client, db, monkeypatch, alice):
+    _patch_validator(monkeypatch, valid=True)
+    _auth(client, alice)
+    await client.put(
+        "/api/me/api-keys/anthropic",
+        json={"api_key": "sk-ant-test-endpoint-good-key-9988"},
+    )
+
+    async def fake_revalidate(db_, user_id, provider):
+        return ValidationResult(False, "key was revoked")
+
+    monkeypatch.setattr(
+        "app.api.routes.user_api_keys.revalidate_user_api_key", fake_revalidate
+    )
+    r = await client.post("/api/me/api-keys/anthropic/test")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["valid"] is False
+    assert body["error"] == "key was revoked"
+
+
+async def test_encrypted_in_db_not_plaintext(db, monkeypatch, alice):
+    """The encrypted column must not equal the raw key. If Fernet ever
+    breaks silently this catches it before secrets land at rest."""
+    from sqlalchemy import select
+
+    from app.models.user_api_key import UserApiKey
+    from app.services.user_api_key import (
+        PROVIDER_ANTHROPIC,
+        upsert_user_api_key,
+    )
+
+    raw = "sk-ant-encryption-test-key-XYZA"
+    await upsert_user_api_key(db, alice.id, PROVIDER_ANTHROPIC, raw, is_valid=True)
+    row = (await db.execute(select(UserApiKey).where(UserApiKey.user_id == alice.id))).scalar_one()
+    assert row.api_key_encrypted != raw
+    assert raw not in row.api_key_encrypted
+    assert row.key_last_four == "XYZA"
+
+
+async def test_scan_without_key_fails_with_missing_api_key(db, monkeypatch, alice):
+    """Scan engine must refuse to call Anthropic when the owner has no
+    key configured, and surface MISSING_API_KEY on the scan row."""
+    import uuid
+
+    from app.models.repository import Repository
+    from app.models.scan import Scan
+    from app.services.scan_engine import run_scan
+
+    repo = Repository(
+        github_repo_id=99001,
+        owner="alice",
+        name="example",
+        full_name="alice/example",
+        default_branch="main",
+    )
+    db.add(repo)
+    await db.commit()
+    await db.refresh(repo)
+
+    scan = Scan(
+        repository_id=repo.id,
+        triggered_by_user_id=alice.id,
+        status="pending",
+    )
+    db.add(scan)
+    await db.commit()
+    await db.refresh(scan)
+
+    monkeypatch.setattr(
+        "app.config.get_settings",
+        lambda: type("S", (), {"e2e_test_mode": True})(),
+        raising=False,
+    )
+
+    with pytest.raises(Exception):
+        await run_scan(db, scan.id)
+
+    await db.refresh(scan)
+    assert scan.status == "failed"
+    assert scan.error is not None
+    assert "MISSING_API_KEY" in scan.error
