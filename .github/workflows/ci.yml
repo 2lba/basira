@@ -103,7 +103,9 @@ jobs:
 
       - name: pip-audit
         working-directory: backend
-        run: pip-audit --strict --skip-editable
+        # --strict treats the local editable package as a hard fail; we
+        # only care about pinned third-party CVEs.
+        run: pip-audit --skip-editable
 
       - name: upload coverage
         if: always()
